@@ -60,6 +60,22 @@ class Tileset {
 		this.generate();
 	}
 
+	// Returns neighbor positions relative to x and y
+	neighbors(x, y) {
+		// Neighbors are stored in an array, clockwise direction starting from the top-left corner:
+		// 0 = top left, 1 = top, 2 = top right, 3 = righ, 4 = bottom right, 5 = bottom, 6 = bottom left, 7 = left
+		return [
+			vector([x - 1, y - 1]),
+			vector([x, y - 1]),
+			vector([x + 1, y - 1]),
+			vector([x + 1, y]),
+			vector([x + 1, y + 1]),
+			vector([x, y + 1]),
+			vector([x - 1, y + 1]),
+			vector([x - 1, y])
+		];
+	}
+
 	// Returns a tile from the given layer
 	tile_get(layer, x, y) {
 		const l = this.layers[layer];
