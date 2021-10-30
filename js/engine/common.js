@@ -1,6 +1,3 @@
-const SPRITES_PATH = "img/sprites/";
-const SPRITES_EXT = ".png";
-
 // TODO: Make the seed customizable and predictable
 const WORLD_SEED = Math.random() * 1000000;
 const WORLD_ZOOM = 1;
