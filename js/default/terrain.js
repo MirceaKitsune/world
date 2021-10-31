@@ -21,40 +21,42 @@ function tileset_floor(x, y) {
 // Returns the corresponding wall tile set from this top left corner
 function tileset_wall(x, y) {
 	return {
-		center: [[x + 1, y + 1]],
-		top: [[x + 1, y + 0]],
-		bottom: [[x + 1, y + 2]],
-		left: [[x + 0, y + 1]],
-		right: [[x + 2, y + 1]],
-		top_left: [[x + 0, y + 0]],
-		top_right: [[x + 2, y + 0]],
-		bottom_left: [[x + 0, y + 2]],
-		bottom_right: [[x + 2, y + 2]]
+		single_left: [[x + 0, y + 0]],
+		single_center: [[x + 1, y + 0]],
+		single_right: [[x + 2, y + 0]],
+		center: [[x + 1, y + 2]],
+		top: [[x + 1, y + 1]],
+		bottom: [[x + 1, y + 3]],
+		left: [[x + 0, y + 2]],
+		right: [[x + 2, y + 2]],
+		top_left: [[x + 0, y + 1]],
+		top_right: [[x + 2, y + 1]],
+		bottom_left: [[x + 0, y + 3]],
+		bottom_right: [[x + 2, y + 3]]
 	};
 }
 
 const tileset_outdoor_terrain = {
 	tileset: "img/tilesets/lpc_terrain.png",
 	tilesize: 32,
-	layers: 8,
 	scale_x: 32,
 	scale_y: 16,
 	brushes: [
 		{
-			height: 0.25,
-			solid: true,
+			density: 0.75,
+			layer: 1,
 			tiles_floor: tileset_floor(3, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			height: 0.50,
-			solid: true,
+			density: 0.5,
+			layer: 2,
 			tiles_floor: tileset_floor(0, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			height: 0.75,
-			solid: true,
+			density: 0.25,
+			layer: 4,
 			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)
 		}

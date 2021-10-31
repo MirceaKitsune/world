@@ -8,8 +8,8 @@ class Tileset {
 		this.image.src = this.data.tileset;
 		this.image.onload = this.onload.bind(this);
 
-		// To avoid incorrect draw order across layers, brushes are sorted based on their height
-		this.data.brushes.sort(function(a, b) { return a.height - b.height });
+		// To avoid incorrect draw order sort brushes based on their layer
+		this.data.brushes.sort(function(a, b) { return a.layer - b.layer });
 
 		// Create the tileset element and append it to the parent element
 		this.element = document.createElement("div");
