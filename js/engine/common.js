@@ -1,4 +1,5 @@
 // TODO: Make the seed customizable and predictable
+const WORLD_RATE = 1000 / 60; // 60 FPS
 const WORLD_SEED = Math.random() * 1000000;
 const WORLD_ZOOM = 1;
 

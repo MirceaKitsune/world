@@ -1,0 +1,20 @@
+.sprite {
+	position: absolute;
+	overflow: hidden;
+
+	/* Actor.set_position, Actor.set_movement */
+	left: auto;
+	top: auto;
+
+	/* Actor.set_sprite */
+	width: auto;
+	height: auto;
+
+	/* Actor.set_animation */
+	background-image: none;
+	background-size: auto auto;
+	background-position: auto auto;
+
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
+}

@@ -8,6 +8,11 @@ class Map {
 		this.tilesets_terrain = [];
 		for(let terrain in data.tilesets.terrains)
 			this.tilesets_terrain[terrain] = new TilesetTerrain(data.tilesets.terrains[terrain], this.element);
+
+		// Create actor entities
+		this.actors_players = [];
+		for(let player in data.actors.players)
+			this.actors_players = new ActorPlayer(data.actors.players[player], this.element);
 	}
 
 	// Activate this map

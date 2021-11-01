@@ -1,0 +1,11 @@
+.tileset {
+	position: absolute;
+	overflow: hidden;
+
+	/* set in tileset.js */
+	width: auto;
+	height: auto;
+
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
+}

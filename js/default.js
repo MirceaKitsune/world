@@ -1,3 +1,5 @@
+// Default world
+
 // Returns the corresponding floor tile set from this top left corner
 function tileset_floor(x, y) {
 	return {
@@ -63,9 +65,26 @@ const tileset_outdoor_terrain = {
 	]
 };
 
+const actor_player = {
+	name: "player",
+	acceleration: 0.5,
+	friction: 0.5,
+	idle: 0,
+	sprite: {
+		sprite: "img/sprites/hero.png",
+		scale_x: 24,
+		scale_y: 32,
+		frames_x: 4,
+		frames_y: 4
+	}
+};
+
 const map_outdoor = {
 	tilesets: {
 		terrains: [tileset_outdoor_terrain]
+	},
+	actors: {
+		players: [actor_player]
 	}
 };
 
