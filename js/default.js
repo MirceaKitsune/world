@@ -4,7 +4,7 @@
 function tileset_floor(x, y) {
 	return {
 		center: [[x + 1, y + 4], [x + 0, y + 0], [x + 1, y + 0], [x + 2, y + 0]],
-		single: [[x + 0, y + 1], [x + 0, y + 2]],
+		path: [[x + 0, y + 1], [x + 0, y + 2]],
 		top: [[x + 1, y + 3]],
 		bottom: [[x + 1, y + 5]],
 		left: [[x + 0, y + 4]],
@@ -47,18 +47,21 @@ const tileset_outdoor_terrain = {
 		{
 			density: 0.75,
 			layer: 1,
+			path: 0,
 			tiles_floor: tileset_floor(3, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
 			density: 0.5,
 			layer: 2,
+			path: 0.5,
 			tiles_floor: tileset_floor(0, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
 			density: 0.25,
 			layer: 4,
+			path: 0.25,
 			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)
 		}

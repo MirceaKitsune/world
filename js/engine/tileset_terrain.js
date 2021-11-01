@@ -1,6 +1,6 @@
 // Terrain tile positions as named in the brush definition
 const TILE_FLOOR_CENTER = "center";
-const TILE_FLOOR_SINGLE = "single";
+const TILE_FLOOR_PATH = "path";
 const TILE_FLOOR_TOP = "top";
 const TILE_FLOOR_BOTTOM = "bottom";
 const TILE_FLOOR_LEFT = "left";
@@ -29,7 +29,7 @@ const TILE_WALL_BOTTOM_RIGHT = "bottom_right";
 class TilesetTerrain extends Tileset {
 	// Returns noise at a given 2D position
 	noise(x, y, seed) {
-		return Math.abs(Math.sin(((1 + x) / (1 + y)) * seed));
+		return Math.abs(Math.sin(1 + ((1 + x) / (1 + y)) * seed));
 	}
 
 	// Sets a terrain floor tile
@@ -86,6 +86,18 @@ class TilesetTerrain extends Tileset {
 		}
 	}
 
+	// Sets a terrain path tile
+	generate_terrain_set_tile_path(layer, x, y, brush, length) {
+		// Draw a path for this wall
+		if(brush.path > 0 && this.noise(x, y, layer) <= brush.path) {
+			const tile = {
+				tile: get_random(brush.tiles_floor[TILE_FLOOR_PATH])
+			};
+			for(let i = layer; i >= layer - length; i--)
+				this.tile_set(layer, x, y + (layer - i), tile);
+		}
+	}
+
 	// Returns true if this is a fully surrounded tile
 	generate_terrain_get_tile_full(layer, x, y, seed, height) {
 		if(this.noise(x, y, seed) < height)
@@ -116,6 +128,7 @@ class TilesetTerrain extends Tileset {
 				const draw_x = x;
 				const draw_y = y - layer_end;
 
+				const noise_this = this.noise(x, y, layer_end);
 				const has_this = this.generate_terrain_get_tile_full(layer_end, x, y, seed, height);
 				if(has_this) {
 					// Draw floor center
@@ -134,12 +147,22 @@ class TilesetTerrain extends Tileset {
 					];
 
 					// Draw walls
-					if(!has[1] && has[2])
-						this.generate_terrain_set_tile_wall(layer_end, draw_x, draw_y, brush, layer_end - layer_start - 1, -1);
+					if(!has[1] && has[2] && !has[3])
+						this.generate_terrain_set_tile_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, -1);
 					if(has[1])
-						this.generate_terrain_set_tile_wall(layer_end, draw_x, draw_y, brush, layer_end - layer_start - 1, 0);
-					if(!has[1] && has[0])
-						this.generate_terrain_set_tile_wall(layer_end, draw_x, draw_y, brush, layer_end - layer_start - 1, 1);
+						this.generate_terrain_set_tile_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, 0);
+					if(!has[1] && has[0] && !has[7])
+						this.generate_terrain_set_tile_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, 1);
+
+					// Draw paths
+					if(has[1])
+						this.generate_terrain_set_tile_path(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1);
+					if(has[5] && !has[3] && !has[7])
+						this.generate_terrain_set_tile_path(layer_start, draw_x, draw_y, brush, 0);
+					if(has[7] && !has[1] && !has[5])
+						this.generate_terrain_set_tile_path(layer_start, draw_x, draw_y, brush, 0);
+					if(has[3] && !has[1] && !has[5])
+						this.generate_terrain_set_tile_path(layer_start, draw_x, draw_y, brush, 0);
 
 					// Draw floor edges
 					if(has[5] && !has[3] && !has[7])
