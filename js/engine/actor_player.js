@@ -14,19 +14,19 @@ class ActorPlayer extends Actor {
 		if(event.repeat)
 			return;
 
-		const vel = this.data.velocity_move;
+		const vel = this.settings.velocity_move;
 		if(event.key == "ArrowLeft" || event.key == "a") {
-			this.keys[0] -= this.data.acceleration;
-			this.acceleration(this.keys[0], undefined);
+			this.keys[0] -= this.settings.acceleration;
+			this.velocity_set_acceleration(this.keys[0], undefined);
 		} else if(event.key == "ArrowRight" || event.key == "d") {
-			this.keys[0] += this.data.acceleration;
-			this.acceleration(this.keys[0], undefined);
+			this.keys[0] += this.settings.acceleration;
+			this.velocity_set_acceleration(this.keys[0], undefined);
 		} else if(event.key == "ArrowUp" || event.key == "w") {
-			this.keys[1] -= this.data.acceleration;
-			this.acceleration(undefined, this.keys[1]);
+			this.keys[1] -= this.settings.acceleration;
+			this.velocity_set_acceleration(undefined, this.keys[1]);
 		} else if(event.key == "ArrowDown" || event.key == "s") {
-			this.keys[1] += this.data.acceleration;
-			this.acceleration(undefined, this.keys[1]);
+			this.keys[1] += this.settings.acceleration;
+			this.velocity_set_acceleration(undefined, this.keys[1]);
 		}
 	}
 
@@ -35,19 +35,19 @@ class ActorPlayer extends Actor {
 		if(event.repeat)
 			return;
 
-		const vel = this.data.velocity_move;
+		const vel = this.settings.velocity_move;
 		if(event.key == "ArrowLeft" || event.key == "a") {
-			this.keys[0] += this.data.acceleration;
-			this.acceleration(this.keys[0], undefined);
+			this.keys[0] += this.settings.acceleration;
+			this.velocity_set_acceleration(this.keys[0], undefined);
 		} else if(event.key == "ArrowRight" || event.key == "d") {
-			this.keys[0] -= this.data.acceleration;
-			this.acceleration(this.keys[0], undefined);
+			this.keys[0] -= this.settings.acceleration;
+			this.velocity_set_acceleration(this.keys[0], undefined);
 		} else if(event.key == "ArrowUp" || event.key == "w") {
-			this.keys[1] += this.data.acceleration;
-			this.acceleration(undefined, this.keys[1]);
+			this.keys[1] += this.settings.acceleration;
+			this.velocity_set_acceleration(undefined, this.keys[1]);
 		} else if(event.key == "ArrowDown" || event.key == "s") {
-			this.keys[1] -= this.data.acceleration;
-			this.acceleration(undefined, this.keys[1]);
+			this.keys[1] -= this.settings.acceleration;
+			this.velocity_set_acceleration(undefined, this.keys[1]);
 		}
 	}
 }

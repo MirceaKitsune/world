@@ -3,20 +3,20 @@
 // Returns the corresponding floor tile set from this top left corner
 function tileset_floor(x, y) {
 	return {
-		center: [[x + 1, y + 4], [x + 0, y + 0], [x + 1, y + 0], [x + 2, y + 0]],
 		path: [[x + 0, y + 1], [x + 0, y + 2]],
-		top: [[x + 1, y + 3]],
-		bottom: [[x + 1, y + 5]],
-		left: [[x + 0, y + 4]],
-		right: [[x + 2, y + 4]],
-		in_top_left: [[x + 1, y + 1]],
-		in_top_right: [[x + 2, y + 1]],
-		in_bottom_left: [[x + 1, y + 2]],
-		in_bottom_right: [[x + 2, y + 2]],
-		out_top_left: [[x + 0, y + 3]],
-		out_top_right: [[x + 2, y + 3]],
-		out_bottom_left: [[x + 0, y + 5]],
-		out_bottom_right: [[x + 2, y + 5]]
+		center: [[x + 1, y + 4], [x + 0, y + 0], [x + 1, y + 0], [x + 2, y + 0]],
+		edge_top: [[x + 1, y + 3]],
+		edge_bottom: [[x + 1, y + 5]],
+		edge_left: [[x + 0, y + 4]],
+		edge_right: [[x + 2, y + 4]],
+		corner_in_top_left: [[x + 1, y + 1]],
+		corner_in_top_right: [[x + 2, y + 1]],
+		corner_in_bottom_left: [[x + 1, y + 2]],
+		corner_in_bottom_right: [[x + 2, y + 2]],
+		corner_out_top_left: [[x + 0, y + 3]],
+		corner_out_top_right: [[x + 2, y + 3]],
+		corner_out_bottom_left: [[x + 0, y + 5]],
+		corner_out_bottom_right: [[x + 2, y + 5]]
 	};
 }
 
@@ -24,25 +24,23 @@ function tileset_floor(x, y) {
 function tileset_wall(x, y) {
 	return {
 		single_left: [[x + 0, y + 0]],
-		single_center: [[x + 1, y + 0]],
+		single_middle: [[x + 1, y + 0]],
 		single_right: [[x + 2, y + 0]],
-		center: [[x + 1, y + 2]],
-		top: [[x + 1, y + 1]],
-		bottom: [[x + 1, y + 3]],
-		left: [[x + 0, y + 2]],
-		right: [[x + 2, y + 2]],
-		top_left: [[x + 0, y + 1]],
-		top_right: [[x + 2, y + 1]],
-		bottom_left: [[x + 0, y + 3]],
-		bottom_right: [[x + 2, y + 3]]
+		left_top: [[x + 0, y + 1]],
+		left_center: [[x + 0, y + 2]],
+		left_bottom: [[x + 0, y + 3]],
+		middle_top: [[x + 1, y + 1]],
+		middle_center: [[x + 1, y + 2]],
+		middle_bottom: [[x + 1, y + 3]],
+		right_top: [[x + 2, y + 1]],
+		right_center: [[x + 2, y + 2]],
+		right_bottom: [[x + 2, y + 3]]
 	};
 }
 
 const tileset_outdoor_terrain = {
-	tileset: "img/tilesets/lpc_terrain.png",
-	tilesize: 32,
-	scale_x: 32,
-	scale_y: 16,
+	image: "img/tilesets/lpc_terrain.png",
+	size: 32,
 	brushes: [
 		{
 			density: 0.75,
@@ -74,7 +72,7 @@ const actor_player = {
 	friction: 0.5,
 	idle: 0,
 	sprite: {
-		sprite: "img/sprites/hero.png",
+		image: "img/sprites/hero.png",
 		scale_x: 24,
 		scale_y: 32,
 		frames_x: 4,
@@ -83,6 +81,8 @@ const actor_player = {
 };
 
 const map_outdoor = {
+	scale_x: 1024,
+	scale_y: 512,
 	tilesets: {
 		terrains: [tileset_outdoor_terrain]
 	},
