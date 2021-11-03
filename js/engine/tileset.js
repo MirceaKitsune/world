@@ -49,7 +49,23 @@ class Tileset {
 	}
 
 	// Sets the data of a tile for this layer
-	tile_set(layer, x, y, tile, data) {
+	tile_set(layer, x, y, data) {
+		// The rectangle representing the left / top / right / bottom corners are added in addition to the data we received
+		data.rectangle = [
+			x * this.settings.size,
+			y * this.settings.size,
+			x * this.settings.size + this.settings.size,
+			y * this.settings.size + this.settings.size
+		];
+
+		// Add the data of this tile to the layer data array
+		if(!this.data_layers[layer])
+			this.data_layers[layer] = [];
+		this.data_layers[layer].push(data);
+	}
+
+	// Draws a tile on the canvas of its layer
+	tile_draw(layer, x, y, tile) {
 		// If this layer hasn't been set by a previous call, set it up now
 		if(!this.element_layers[layer]) {
 			this.element_layers[layer] = {};
@@ -73,12 +89,5 @@ class Tileset {
 		const pos = vector(tile);
 		const ctx = this.element_layers[layer].element_canvas.getContext("2d");
 		ctx.drawImage(this.image, pos.x * this.settings.size, pos.y * this.settings.size, this.settings.size, this.settings.size, x * this.settings.size * WORLD_ZOOM, y * this.settings.size * WORLD_ZOOM, this.settings.size * WORLD_ZOOM, this.settings.size * WORLD_ZOOM);
-
-		// Add the data of this tile to the layer data array
-		// The rectangle representing the left / top / right / bottom corners is added in addition to the data we received
-		data.rectangle = [x, y, x + this.settings.size, y + this.settings.size];
-		if(!this.data_layers[layer])
-			this.data_layers[layer] = [];
-		this.data_layers[layer].push(data);
 	}
 }

@@ -34,11 +34,40 @@ class TilesetTerrain extends Tileset {
 
 	// Sets a floor tile
 	tile_set_floor(layer, x, y, brush, type) {
-		this.tile_set(layer, x, y, get_random(brush.tiles_floor[type]), {
-			height: layer,
-			walkable: true,
-			path: false
-		});
+		this.tile_draw(layer, x, y, get_random(brush.tiles_floor[type]));
+		if(type == TILE_FLOOR_CENTER) {
+			// Only center tiles need to register collision data
+			this.tile_set(layer, x, y, {
+				solid: false,
+				path: [undefined, undefined, undefined, undefined]
+			});
+		}
+	}
+
+	// Sets a path tile
+	tile_set_path(layer, x, y, brush, length, angle, target) {
+		if(brush.path > 0 && this.noise(x, y, layer) <= brush.path) {
+			for(let i = layer; i >= layer - length; i--) {
+				// Paths are meant to transport actors stepping on them between different heights
+				// Use angle to determine which direction takes you to the higher layer, the opposite direction leading to the lower layer
+				// Angle, clockwise direction: 0 = Up, 1 = Right, 2 = Down, 3 = Left
+				var path = [undefined, undefined, undefined, undefined];
+				if(angle == 0)
+					path = [target, undefined, layer, undefined];
+				else if(angle == 1)
+					path = [undefined, target, undefined, layer];
+				else if(angle == 2)
+					path = [layer, undefined, target, undefined];
+				else if(angle == 3)
+					path = [undefined, layer, undefined, target];
+
+				this.tile_draw(layer, x, y + (layer - i), get_random(brush.tiles_floor[TILE_FLOOR_PATH]));
+				this.tile_set(layer, x, y + (layer - i), {
+					solid: false,
+					path: path
+				});
+			}
+		}
 	}
 
 	// Sets a wall tile
@@ -76,24 +105,17 @@ class TilesetTerrain extends Tileset {
 					type = TILE_WALL_RIGHT_CENTER;
 			}
 
-			if(type)
-				this.tile_set(layer, x, y + (layer - i), get_random(brush.tiles_wall[type]), {
-					height: layer,
-					walkable: false,
-					path: false
-				});
+			if(type) {
+				this.tile_draw(layer, x, y + (layer - i), get_random(brush.tiles_wall[type]));
+				if(type == TILE_WALL_SINGLE_MIDDLE || type == TILE_WALL_MIDDLE_TOP || type == TILE_WALL_MIDDLE_CENTER || type == TILE_WALL_MIDDLE_BOTTOM) {
+					// Only middle tiles need to register collision data
+					this.tile_set(layer, x, y + (layer - i), {
+						solid: true,
+						path: [undefined, undefined, undefined, undefined]
+					});
+				}
+			}
 		}
-	}
-
-	// Sets a path tile
-	tile_set_path(layer, x, y, brush, length) {
-		if(brush.path > 0 && this.noise(x, y, layer) <= brush.path)
-			for(let i = layer; i >= layer - length; i--)
-				this.tile_set(layer, x, y + (layer - i), get_random(brush.tiles_floor[TILE_FLOOR_PATH]), {
-					height: layer,
-					walkable: true,
-					path: false
-				});
 	}
 
 	// Returns true if this is a fully surrounded tile
@@ -154,13 +176,13 @@ class TilesetTerrain extends Tileset {
 
 					// Draw paths
 					if(has[1])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1);
+						this.tile_set_path(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, 2, layer_end);
 					if(has[5] && !has[3] && !has[7])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0);
+						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, 0, layer_end);
 					if(has[7] && !has[1] && !has[5])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0);
+						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, 1, layer_end);
 					if(has[3] && !has[1] && !has[5])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0);
+						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, 3, layer_end);
 
 					// Draw floor edges
 					if(has[5] && !has[3] && !has[7])
