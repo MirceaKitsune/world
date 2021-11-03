@@ -71,6 +71,7 @@ const actor_player = {
 	acceleration: 0.5,
 	friction: 0.5,
 	idle: 0,
+	box: [-16, -16, 16, 16],
 	sprite: {
 		image: "img/sprites/hero.png",
 		scale_x: 24,
