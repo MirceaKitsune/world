@@ -16,12 +16,13 @@ class Actor {
 		this.data_actors_self.layer = 0;
 		this.data_actors_self.anim = null;
 
+		// Interval functions
+		this.interval_velocity = null;
+		this.spawned = false;
+
 		// Set the boundaries within which this actor may travel
 		this.limit_x = x;
 		this.limit_y = y;
-
-		// Interval functions used to control timers
-		this.interval_velocity = null;
 
 		// The image file used by this actor, prepares the image and runs the main function once it loads
 		this.image = new Image();
@@ -34,10 +35,10 @@ class Actor {
 		this.element.setAttribute("id", "sprite");
 		element.appendChild(this.element);
 
-		// Set default position and angle
+		// Set default position and angle, the actor should be moved to a valid position by the spawn function
 		this.position_set(0, 0);
 		this.layer_set(1);
-		this.set_animation(2, Infinity, this.settings.idle);
+		this.set_animation(0, Infinity, this.settings.idle);
 	}
 
 	// Executed when the actor was spawned, must be replaced by child classes
@@ -52,6 +53,44 @@ class Actor {
 		this.element.style.height = px([this.settings.sprite.scale_y]);
 
 		this.init();
+	}
+
+	// Move the actor to a valid position if they haven't been already spawned
+	spawn() {
+		if(this.spawned)
+			return;
+		this.spawned = true;
+
+		// We want to get the topmost floor of each possible position, last valid tile overrides this layer
+		// Potential positions are stored as a keys with the last layer of the position as the value
+		var positions = {};
+		for(let layers in this.data_layers) {
+			for(let tiles in this.data_layers[layers]) {
+				// We want the position to be the center of the tile
+				const tile = this.data_layers[layers][tiles];
+				const center_x = tile.rectangle[0] + (tile.rectangle[2] - tile.rectangle[0]) / 2;
+				const center_y = tile.rectangle[1] + (tile.rectangle[3] - tile.rectangle[1]) / 2;
+				const center = [center_x, center_y];
+
+				// Add or update the layer of this position if it's a valid floor, remove it if we encounter a solid
+				if(tile.solid == false)
+					positions[center.toString()] = layers;
+				else if(tile.solid == true) {
+					delete positions[center.toString()];
+				}
+			}
+		}
+
+		// Extract a random position from the property and its topmost layer from the value
+		const keys = Object.keys(positions);
+		const index = keys[Math.floor(Math.random() * keys.length)];
+		const pos = index.split(",");
+		const layer = positions[index];
+
+		// Apply the position and layer
+		this.position_set(Number(pos[0]), Number(pos[1]));
+		this.layer_set(layer);
+		this.set_animation(random_range[0, 4], Infinity, this.settings.idle);
 	}
 
 	// Sets the frame and animation of the sprite
@@ -155,9 +194,9 @@ class Actor {
 			for(let tiles in this.data_layers[layers]) {
 				// Determine in which directions bounding boxes are intersecting
 				const tile = this.data_layers[layers][tiles];
-				const touching = ofs[2] >= tile.rectangle[0] && ofs[3] >= tile.rectangle[1] && ofs[0] <= tile.rectangle[2] && ofs[1] <= tile.rectangle[3];
-				const touching_x = ofs_x[2] >= tile.rectangle[0] && ofs_x[3] >= tile.rectangle[1] && ofs_x[0] <= tile.rectangle[2] && ofs_x[1] <= tile.rectangle[3];
-				const touching_y = ofs_y[2] >= tile.rectangle[0] && ofs_y[3] >= tile.rectangle[1] && ofs_y[0] <= tile.rectangle[2] && ofs_y[1] <= tile.rectangle[3];
+				const touching = intersects(ofs, tile.rectangle);
+				const touching_x = intersects(ofs_x, tile.rectangle);
+				const touching_y = intersects(ofs_y, tile.rectangle);
 
 				// If the actor is standing on a path, all non-solid tiles between its start and end layers become valid targets to move to
 				// Also position the actor on the highest layer being touched so they move at the bottom or top accordingly
