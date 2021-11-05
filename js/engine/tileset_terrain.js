@@ -34,27 +34,18 @@ class TilesetTerrain extends Tileset {
 
 	// Sets a floor tile
 	tile_set_floor(layer, x, y, brush, type) {
-		this.tile_draw(layer, x, y, get_random(brush.tiles_floor[type]));
-		if(type == TILE_FLOOR_CENTER) {
-			// Only center tiles need to register collision data
-			this.tile_set(layer, x, y, {
-				solid: false,
-				path: false,
-				flags: brush.flags_floor
-			});
-		}
+		const tile = get_random(brush.tiles_floor[type]);
+		const flags = type == TILE_FLOOR_CENTER ? brush.flags.floor : null;
+		this.tile_set(layer, x, y, tile, flags);
 	}
 
 	// Sets a path tile
 	tile_set_path(layer, x, y, brush, length, target) {
 		if(brush.path > 0 && this.noise(x, y, layer) <= brush.path) {
 			for(let i = layer; i >= layer - length; i--) {
-				this.tile_draw(layer, x, y + (layer - i), get_random(brush.tiles_floor[TILE_FLOOR_PATH]));
-				this.tile_set(layer, x, y + (layer - i), {
-					solid: false,
-					path: true,
-					flags: brush.flags_floor_path
-				});
+				const tile = get_random(brush.tiles_floor[TILE_FLOOR_PATH]);
+				const flags = brush.flags.floor_path;
+				this.tile_set(layer, x, y + (layer - i), tile, flags);
 			}
 		}
 	}
@@ -94,17 +85,9 @@ class TilesetTerrain extends Tileset {
 					type = TILE_WALL_RIGHT_CENTER;
 			}
 
-			if(type) {
-				this.tile_draw(layer, x, y + (layer - i), get_random(brush.tiles_wall[type]));
-				if(type == TILE_WALL_SINGLE_MIDDLE || type == TILE_WALL_MIDDLE_TOP || type == TILE_WALL_MIDDLE_CENTER || type == TILE_WALL_MIDDLE_BOTTOM) {
-					// Only middle tiles need to register collision data
-					this.tile_set(layer, x, y + (layer - i), {
-						solid: true,
-						path: false,
-						flags: brush.flags_wall
-					});
-				}
-			}
+			const tile = get_random(brush.tiles_wall[type]);
+			const flags = type == TILE_WALL_SINGLE_MIDDLE || type == TILE_WALL_MIDDLE_TOP || type == TILE_WALL_MIDDLE_CENTER || type == TILE_WALL_MIDDLE_BOTTOM ? brush.flags.wall : null;
+			this.tile_set(layer, x, y + (layer - i), tile, flags);
 		}
 	}
 

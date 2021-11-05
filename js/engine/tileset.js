@@ -49,19 +49,24 @@ class Tileset {
 	}
 
 	// Sets the data of a tile for this layer
-	tile_set(layer, x, y, data) {
-		// The rectangle representing the left / top / right / bottom corners are added in addition to the data we received
-		data.rectangle = [
-			x * this.settings.size,
-			y * this.settings.size,
-			x * this.settings.size + this.settings.size,
-			y * this.settings.size + this.settings.size
-		];
+	tile_set(layer, x, y, tile, flags) {
+		// Data: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
+		if(flags) {
+			var data = [
+				x * this.settings.size,
+				y * this.settings.size,
+				x * this.settings.size + this.settings.size,
+				y * this.settings.size + this.settings.size,
+				flags
+			];
+			if(!this.data_layers[layer])
+				this.data_layers[layer] = [];
+			this.data_layers[layer].push(data);
+		}
 
-		// Add the data of this tile to the layer data array
-		if(!this.data_layers[layer])
-			this.data_layers[layer] = [];
-		this.data_layers[layer].push(data);
+		// Tile: 0 = left, 1 = top
+		if(tile)
+			this.tile_draw(layer, x, y, tile);
 	}
 
 	// Draws a tile on the canvas of its layer

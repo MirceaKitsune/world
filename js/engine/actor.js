@@ -16,7 +16,7 @@ class Actor {
 		this.data_actors_self.layer = 0;
 		this.data_actors_self.anim = null;
 
-		// Interval functions
+		// Internal functions
 		this.interval_velocity = null;
 		this.spawned = false;
 
@@ -55,6 +55,14 @@ class Actor {
 		this.init();
 	}
 
+	// Check if a flag exists in the list and return its value if yes
+	flag(category, list) {
+		for(let flags in this.settings.flags[category])
+			if(list.includes(flags))
+				return this.settings.flags[category][flags];
+		return null;
+	}
+
 	// Move the actor to a valid position if they haven't been already spawned
 	spawn() {
 		if(this.spawned)
@@ -68,25 +76,15 @@ class Actor {
 			for(let tiles in this.data_layers[layers]) {
 				// We want the position to be the center of the tile
 				const tile = this.data_layers[layers][tiles];
-				const center_x = tile.rectangle[0] + (tile.rectangle[2] - tile.rectangle[0]) / 2;
-				const center_y = tile.rectangle[1] + (tile.rectangle[3] - tile.rectangle[1]) / 2;
+				const center_x = tile[0] + (tile[2] - tile[0]) / 2;
+				const center_y = tile[1] + (tile[3] - tile[1]) / 2;
 				const center = [center_x, center_y];
 
-				// For a spawn position to be valid the tile must have at least one flag from the actor's spawn flags
-				var valid = false;
-				for(let flags in tile.flags) {
-					if(this.settings.flags_spawn.includes(tile.flags[flags])) {
-						valid = true;
-						break;
-					}
-				}
-
-				// Add or update the layer of this position if it's a valid floor, remove it otherwise
-				if(tile.solid || !valid) {
-					delete positions[center.toString()];
-				} else {
+				// Add or update this position if it's a valid floor, remove it otherwise
+				if(this.flag("spawn", tile[4]) > 0)
 					positions[center.toString()] = layers;
-				}
+				else
+					delete positions[center.toString()];
 			}
 		}
 
@@ -181,6 +179,7 @@ class Actor {
 		// We want to predict movements per direction, store bounding boxes with the X and Y offsets separately
 		// Position: 0 = x, 1 = y
 		// Box: 0 = left, 1 = top, 2 = right, 3 = bottom
+		// Tile: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
 		const height = this.data_actors_self.layer;
 		const pos = this.data_actors_self.pos;
 		const box = this.data_actors_self.box;
@@ -198,24 +197,21 @@ class Actor {
 		for(let layers in this.data_layers) {
 			for(let tiles in this.data_layers[layers]) {
 				const tile = this.data_layers[layers][tiles];
-				const touching_x = intersects(ofs_x, tile.rectangle);
-				const touching_y = intersects(ofs_y, tile.rectangle);
+				const touching_x = intersects(ofs_x, tile);
+				const touching_y = intersects(ofs_y, tile);
 				if(!touching_x && !touching_y)
 					continue;
 
-				// Set tile flags
-				if(tile.flags.length > 0)
-					flags = tile.flags;
-
-				// Remember the last layer we touched
-				// If the actor is standing on a path, this layer will be applied whereas all floors become valid
+				// Remember the last layer we touched and inherit its flags
+				// If the actor is standing on a path tile, this layer will be applied while all floors become valid
+				flags = tile[4];
 				layer = layers;
-				if(tile.path)
+				if(this.flag("path", flags) > 0)
 					layer_path = true;
 
-				// We're touching a solid if this is either a wall or a floor from a non-valid layer
+				// We're touching a solid if this is either a non-solid tile or one from a non-valid layer
 				// The topmost surface is counted so a later iteration may override this decision
-				if(tile.solid) {
+				if(this.flag("solid", flags) > 0) {
 					if(touching_x)
 						solid_x = true;
 					if(touching_y)
@@ -272,23 +268,15 @@ class Actor {
 			flags = surface.flags;
 		}
 
-		// Determine the friction this actor is experiencing based on the surface they're moving on
-		// The first friction detected will be used
-		var friction = 1;
-		for(let flag in this.settings.flags_friction) {
-			if(flags.includes(flag)) {
-				friction = this.settings.flags_friction[flag];
-				break;
-			}
-		}
-
 		// Apply the transition to the new position of the actor
 		var pos = this.position_get();
 		pos.x += transfer_x;
 		pos.y += transfer_y;
 		this.position_set(pos.x, pos.y);
 
-		// Lose the transition from velocity based on friction
+		// Determine the friction this actor is experiencing based on the surface they're moving on
+		// We lose the transition amount from the velocity based on friction
+		const friction = this.flag("friction", flags);
 		this.data_actors_self.vel[0] -= transfer_x * friction;
 		this.data_actors_self.vel[1] -= transfer_y * friction;
 
