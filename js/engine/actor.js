@@ -37,7 +37,7 @@ class Actor {
 
 		// Set default position and angle, the actor should be moved to a valid position by the spawn function
 		this.position_set(0, 0);
-		this.layer_set(1);
+		this.layer_set(0);
 		this.set_animation(0, Infinity, this.settings.idle);
 	}
 
@@ -72,11 +72,20 @@ class Actor {
 				const center_y = tile.rectangle[1] + (tile.rectangle[3] - tile.rectangle[1]) / 2;
 				const center = [center_x, center_y];
 
-				// Add or update the layer of this position if it's a valid floor, remove it if we encounter a solid
-				if(tile.solid == false)
-					positions[center.toString()] = layers;
-				else if(tile.solid == true) {
+				// For a spawn position to be valid the tile must have at least one flag from the actor's spawn flags
+				var valid = false;
+				for(let flags in tile.flags) {
+					if(this.settings.flags_spawn.includes(tile.flags[flags])) {
+						valid = true;
+						break;
+					}
+				}
+
+				// Add or update the layer of this position if it's a valid floor, remove it otherwise
+				if(tile.solid == true || !valid) {
 					delete positions[center.toString()];
+				} else if(tile.solid == false) {
+					positions[center.toString()] = layers;
 				}
 			}
 		}
@@ -187,6 +196,7 @@ class Actor {
 		var layer = null;
 		var layer_min = height;
 		var layer_max = height;
+		var flags = [];
 
 		// Go through the tiles on each layer and selectively pick relevant data from tiles who's boundaries the actor is within
 		// This relies on layers being scanned in bottom to top order, topmost entries must override lower ones
@@ -225,6 +235,10 @@ class Actor {
 					if(touching_y)
 						solid_y = layers < layer_min || layers > layer_max;
 				}
+
+				// Set the tile flags
+				if(touching && tile.flags.length > 0)
+					flags = tile.flags;
 			}
 		}
 
@@ -232,7 +246,8 @@ class Actor {
 		return {
 			solid_x: solid_x,
 			solid_y: solid_y,
-			layer: layer
+			layer: layer,
+			flags: flags
 		};
 	}
 
@@ -248,6 +263,7 @@ class Actor {
 		var transfer_y = this.data_actors_self.vel[1] / 2;
 
 		// Get data about the topmost item we'd collide with based on the direction we're moving in
+		var flags = [];
 		const collision = this.velocity_collisions(transfer_x, transfer_y);
 		if(collision) {
 			// Stop in the direction we're colliding toward
@@ -263,6 +279,19 @@ class Actor {
 			// If we stepped on a path tile, apply the new layer it took the actor to
 			if(collision.layer)
 				this.layer_set(collision.layer);
+
+			// Set the current flags of the player to that of the tile being touched
+			flags = collision.flags;
+		}
+
+		// Determine the friction this actor is experiencing based on the surface they're moving on
+		// The first friction detected will be used
+		var friction = 1;
+		for(let flag in this.settings.flags_friction) {
+			if(flags.includes(flag)) {
+				friction = this.settings.flags_friction[flag];
+				break;
+			}
 		}
 
 		// Apply the transition to the new position of the actor
@@ -272,8 +301,8 @@ class Actor {
 		this.position_set(pos.x, pos.y);
 
 		// Lose the transition from velocity based on friction
-		this.data_actors_self.vel[0] -= transfer_x * this.settings.friction;
-		this.data_actors_self.vel[1] -= transfer_y * this.settings.friction;
+		this.data_actors_self.vel[0] -= transfer_x * friction;
+		this.data_actors_self.vel[1] -= transfer_y * friction;
 
 		// Stop movement updates once we reach the threshold for physics sleeping
 		if(Math.abs(this.data_actors_self.vel[0]) <= ACTOR_VELOCITY_SLEEP && Math.abs(this.data_actors_self.vel[1]) <= ACTOR_VELOCITY_SLEEP) {

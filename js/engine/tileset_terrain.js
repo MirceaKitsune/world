@@ -39,7 +39,8 @@ class TilesetTerrain extends Tileset {
 			// Only center tiles need to register collision data
 			this.tile_set(layer, x, y, {
 				solid: false,
-				path: false
+				path: false,
+				flags: brush.flags_floor
 			});
 		}
 	}
@@ -51,7 +52,8 @@ class TilesetTerrain extends Tileset {
 				this.tile_draw(layer, x, y + (layer - i), get_random(brush.tiles_floor[TILE_FLOOR_PATH]));
 				this.tile_set(layer, x, y + (layer - i), {
 					solid: false,
-					path: target
+					path: target,
+					flags: brush.flags_floor_path
 				});
 			}
 		}
@@ -98,7 +100,8 @@ class TilesetTerrain extends Tileset {
 					// Only middle tiles need to register collision data
 					this.tile_set(layer, x, y + (layer - i), {
 						solid: true,
-						path: false
+						path: false,
+						flags: brush.flags_wall
 					});
 				}
 			}

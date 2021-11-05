@@ -38,6 +38,15 @@ function tileset_wall(x, y) {
 	};
 }
 
+// Common friction settings for character actors
+function flags_friction_character() {
+	return {
+		"path": 1,
+		"grass": 0.625,
+		"stone": 0.5,
+	};
+}
+
 const tileset_outdoor_terrain = {
 	image: "img/tilesets/lpc_terrain.png",
 	size: 32,
@@ -46,6 +55,9 @@ const tileset_outdoor_terrain = {
 			density: 0.75,
 			layer: 1,
 			path: 0,
+			flags_floor: ["grass"],
+			flags_floor_path: ["grass", "path"],
+			flags_wall: ["stone"],
 			tiles_floor: tileset_floor(3, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
@@ -53,6 +65,9 @@ const tileset_outdoor_terrain = {
 			density: 0.5,
 			layer: 2,
 			path: 0.5,
+			flags_floor: ["grass"],
+			flags_floor_path: ["grass", "path"],
+			flags_wall: ["stone"],
 			tiles_floor: tileset_floor(0, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
@@ -60,6 +75,9 @@ const tileset_outdoor_terrain = {
 			density: 0.25,
 			layer: 4,
 			path: 0.25,
+			flags_floor: ["grass"],
+			flags_floor_path: ["grass", "path"],
+			flags_wall: ["stone"],
 			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)
 		}
@@ -69,9 +87,10 @@ const tileset_outdoor_terrain = {
 const actor_player = {
 	name: "player",
 	acceleration: 0.5,
-	friction: 0.5,
 	idle: 0,
-	box: [-16, -16, 16, 16],
+	box: [-8, -8, 8, 8],
+	flags_spawn: ["grass"],
+	flags_friction: flags_friction_character(),
 	sprite: {
 		image: "img/sprites/hero.png",
 		scale_x: 24,
