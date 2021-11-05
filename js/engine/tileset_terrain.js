@@ -52,7 +52,7 @@ class TilesetTerrain extends Tileset {
 				this.tile_draw(layer, x, y + (layer - i), get_random(brush.tiles_floor[TILE_FLOOR_PATH]));
 				this.tile_set(layer, x, y + (layer - i), {
 					solid: false,
-					path: target,
+					path: true,
 					flags: brush.flags_floor_path
 				});
 			}
@@ -165,13 +165,13 @@ class TilesetTerrain extends Tileset {
 						this.tile_set_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, 1);
 
 					// Draw paths
-					if(has[1])
+					if(has[4] && has[5] && has[6] && !has[3] && !has[7])
+						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
+					if(has[2] && has[3] && has[4] && !has[1] && !has[5])
+						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
+					if(has[0] && has[1] && has[2] && !has[3] && !has[7])
 						this.tile_set_path(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, layer_end);
-					if(has[5] && !has[3] && !has[7])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
-					if(has[7] && !has[1] && !has[5])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
-					if(has[3] && !has[1] && !has[5])
+					if(has[0] && has[6] && has[7] && !has[1] && !has[5])
 						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
 
 					// Draw floor edges

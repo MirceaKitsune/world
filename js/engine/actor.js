@@ -82,9 +82,9 @@ class Actor {
 				}
 
 				// Add or update the layer of this position if it's a valid floor, remove it otherwise
-				if(tile.solid == true || !valid) {
+				if(tile.solid || !valid) {
 					delete positions[center.toString()];
-				} else if(tile.solid == false) {
+				} else {
 					positions[center.toString()] = layers;
 				}
 			}
@@ -175,113 +175,101 @@ class Actor {
 			this.set_animation(0, Infinity, this.settings.idle);
 	}
 
-	// Checks if the actor would collide with anything at the given distance, returns a description of the touched surfaces
-	velocity_collisions(x, y) {
-		const height = this.data_actors_self.layer;
-		const vel = vector([x, y]);
-
+	// Returns data regarding the surface this actor will touch at the given distance
+	velocity_surface(x, y) {
 		// The position we're interested in checking is the actor's current position plus the desired offsets
-		// We want to predict some movements only in one direction, also store bounding boxes for the new position with just the X or Y offset
+		// We want to predict movements per direction, store bounding boxes with the X and Y offsets separately
 		// Position: 0 = x, 1 = y
 		// Box: 0 = left, 1 = top, 2 = right, 3 = bottom
+		const height = this.data_actors_self.layer;
 		const pos = this.data_actors_self.pos;
 		const box = this.data_actors_self.box;
-		const ofs = [pos[0] + box[0] + x, pos[1] + box[1] + y, pos[0] + box[2] + x, pos[1] + box[3] + y];
 		const ofs_x = [pos[0] + box[0] + x, pos[1] + box[1] + 0, pos[0] + box[2] + x, pos[1] + box[3] + 0];
 		const ofs_y = [pos[0] + box[0] + 0, pos[1] + box[1] + y, pos[0] + box[2] + 0, pos[1] + box[3] + y];
 
-		// Default decisions overridden below
 		var solid_x = true;
 		var solid_y = true;
-		var layer = null;
-		var layer_min = height;
-		var layer_max = height;
+		var layer = 0;
+		var layer_path = false;
 		var flags = [];
 
-		// Go through the tiles on each layer and selectively pick relevant data from tiles who's boundaries the actor is within
-		// This relies on layers being scanned in bottom to top order, topmost entries must override lower ones
+		// Go through the tiles on each layer and pick relevant data from tiles who's boundaries the actor is within
+		// This relies on layers being scanned in bottom to top order, topmost entries must be allowed to override lower ones
 		for(let layers in this.data_layers) {
 			for(let tiles in this.data_layers[layers]) {
-				// Determine in which directions bounding boxes are intersecting
 				const tile = this.data_layers[layers][tiles];
-				const touching = intersects(ofs, tile.rectangle);
 				const touching_x = intersects(ofs_x, tile.rectangle);
 				const touching_y = intersects(ofs_y, tile.rectangle);
+				if(!touching_x && !touching_y)
+					continue;
 
-				// If the actor is standing on a path, all non-solid tiles between its start and end layers become valid targets to move to
-				// Also position the actor on the highest layer being touched so they move at the bottom or top accordingly
-				if(touching) {
-					if(tile.path && (height == layers || height == tile.path)) {
-						layer_min = layers;
-						layer_max = tile.path;
-					}
-					if(layers == layer_min || layers == layer_max)
-						layer = layers;
-				}
+				// Set tile flags
+				if(tile.flags.length > 0)
+					flags = tile.flags;
 
-				// Three methods are used to describe a solid tile:
-				// true: Is solid both on this layer and all others, usually walls
-				// false: Is not solid on this layer but is solid on others, usually floors
-				// undefined: Is not solid and won't affect collisions at all, usually floating decorations
-				// The topmost collision is counted so another surface covering this later will override solidity
-				if(tile.solid == true) {
+				// Remember the last layer we touched
+				// If the actor is standing on a path, this layer will be applied whereas all floors become valid
+				layer = layers;
+				if(tile.path)
+					layer_path = true;
+
+				// We're touching a solid if this is either a wall or a floor from a non-valid layer
+				// The topmost surface is counted so a later iteration may override this decision
+				if(tile.solid) {
 					if(touching_x)
 						solid_x = true;
 					if(touching_y)
 						solid_y = true;
-				} else if(tile.solid == false) {
+				} else {
 					if(touching_x)
-						solid_x = layers < layer_min || layers > layer_max;
+						solid_x = layers != height && !layer_path;
 					if(touching_y)
-						solid_y = layers < layer_min || layers > layer_max;
+						solid_y = layers != height && !layer_path;
 				}
-
-				// Set the tile flags
-				if(touching && tile.flags.length > 0)
-					flags = tile.flags;
 			}
 		}
 
-		// Return an object containing relevant data for this collision
+		// Return an object containing relevant data for this surface
 		return {
 			solid_x: solid_x,
 			solid_y: solid_y,
-			layer: layer,
+			layer: layer_path && layer,
 			flags: flags
 		};
 	}
 
 	// Runs each frame when a velocity is set to preform updates, turns itself off once movement stops
 	velocity_update() {
+		var flags = [];
+
 		// Apply constant velocity
 		this.data_actors_self.vel[0] += this.data_actors_self.acc[0];
 		this.data_actors_self.vel[1] += this.data_actors_self.acc[1];
 
-		// Amount by which to convert the velocity to a change in position, half it by default
+		// Amount by which to convert the velocity to a change in position, halved by default
 		// This must never be larger than the velocity, if it passes zero and flips signs the actor would reverse direction instead of stopping
 		var transfer_x = this.data_actors_self.vel[0] / 2;
 		var transfer_y = this.data_actors_self.vel[1] / 2;
 
 		// Get data about the topmost item we'd collide with based on the direction we're moving in
-		var flags = [];
-		const collision = this.velocity_collisions(transfer_x, transfer_y);
-		if(collision) {
+		const surface = this.velocity_surface(transfer_x, transfer_y);
+		if(surface) {
 			// Stop in the direction we're colliding toward
-			if(collision.solid_x == true) {
+			if(surface.solid_x) {
 				this.data_actors_self.vel[0] = 0;
 				transfer_x = 0;
 			}
-			if(collision.solid_y == true) {
+			if(surface.solid_y) {
 				this.data_actors_self.vel[1] = 0;
 				transfer_y = 0;
 			}
 
-			// If we stepped on a path tile, apply the new layer it took the actor to
-			if(collision.layer)
-				this.layer_set(collision.layer);
+			// If we stepped on a tile that wants to take us to a new layer, apply the new height to the actor
+			if(surface.layer)
+				this.layer_set(surface.layer);
 
-			// Set the current flags of the player to that of the tile being touched
-			flags = collision.flags;
+			// Set the flags from this surface
+			flags = surface.flags;
 		}
 
 		// Determine the friction this actor is experiencing based on the surface they're moving on
