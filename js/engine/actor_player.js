@@ -14,10 +14,6 @@ class ActorPlayer extends Actor {
 		if(event.repeat)
 			return;
 
-		// TODO: This should be done after the tileset loads, remove this workaround later
-		if(!this.spawned && this.data_layers.length > 0)
-			this.spawn();
-
 		const vel = this.settings.velocity_move;
 		if(event.key == "ArrowLeft" || event.key == "a") {
 			this.keys[0] -= this.settings.acceleration;

@@ -15,15 +15,16 @@ function vector(array) {
 
 // Converts a velocity to an angle
 function vec2ang(vec) {
+	// Use the fastest direction when speeds differ, first if they are equal, no change if both are zero
 	// Angle, clockwise direction: 0 = top, 1 = right, 2 = bottom, 3 = left
-	if(-vec.y > Math.abs(vec.x))
-		return 0;
-	if(+vec.x > Math.abs(vec.y))
-		return 1;
-	if(+vec.y > Math.abs(vec.x))
-		return 2;
-	if(-vec.x > Math.abs(vec.y))
-		return 3;
+	if(Math.abs(vec.x) > Math.abs(vec.y))
+		return vec.x > 0 ? 1 : 3;
+	if(Math.abs(vec.y) > Math.abs(vec.x))
+		return vec.y > 0 ? 2 : 0;
+	if(vec.x != 0)
+		return vec.x > 0 ? 1 : 3;
+	if(vec.y != 0)
+		return vec.y > 0 ? 2 : 0;
 	return undefined;
 }
 
