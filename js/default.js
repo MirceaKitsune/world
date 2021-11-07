@@ -101,7 +101,8 @@ const tileset_outdoor_terrain = {
 const actor_player = {
 	name: "player",
 	acceleration: 0.5,
-	idle: 0,
+	anim_moving: 1,
+	anim_static: 0,
 	box: [-8, -8, 8, 8],
 	flags: flags_actor_character(),
 	sprite: {

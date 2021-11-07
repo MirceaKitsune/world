@@ -13,6 +13,20 @@ function vector(array) {
 	return {x: array[0], y: array[1], z: array[2]};
 }
 
+// Converts a velocity to an angle
+function vec2ang(vec) {
+	// Angle, clockwise direction: 0 = top, 1 = right, 2 = bottom, 3 = left
+	if(-vec.y > Math.abs(vec.x))
+		return 0;
+	if(+vec.x > Math.abs(vec.y))
+		return 1;
+	if(+vec.y > Math.abs(vec.x))
+		return 2;
+	if(-vec.x > Math.abs(vec.y))
+		return 3;
+	return undefined;
+}
+
 // Returns true if a bounding box intersects another
 function intersects(box1, box2) {
 	return box1[2] >= box2[0] && box1[3] >= box2[1] && box1[0] <= box2[2] && box1[1] <= box2[3];

@@ -1,4 +1,5 @@
 ACTOR_VELOCITY_SLEEP = 0.01;
+ACTOR_VELOCITY_STEP = 0.25;
 
 class Actor {
 	constructor(x, y, settings, data_layers, data_actors, element) {
@@ -13,6 +14,8 @@ class Actor {
 		this.data_actors_self.pos = [0, 0];
 		this.data_actors_self.vel = [0, 0];
 		this.data_actors_self.acc = [0, 0];
+		this.data_actors_self.speed = 0;
+		this.data_actors_self.angle = 0;
 		this.data_actors_self.layer = 0;
 		this.data_actors_self.anim = null;
 
@@ -38,7 +41,7 @@ class Actor {
 		// Set default position and angle, the actor should be moved to a valid position by the spawn function
 		this.position_set(0, 0);
 		this.layer_set(0);
-		this.set_animation(0, Infinity, this.settings.idle);
+		this.set_animation(0, this.settings.idle);
 	}
 
 	// Executed when the actor was spawned, must be replaced by child classes
@@ -95,13 +98,14 @@ class Actor {
 		const layer = positions[index];
 
 		// Apply the position and layer
+		const angle = Math.floor(Math.random() * 5);
 		this.position_set(Number(pos[0]), Number(pos[1]));
 		this.layer_set(layer);
-		this.set_animation(random_range[0, 4], Infinity, this.settings.idle);
+		this.set_animation(angle, this.settings.anim_static);
 	}
 
-	// Sets the frame and animation of the sprite
-	set_animation(frame, duration, speed) {
+	// Applies the given frame and animation to the sprite
+	set_animation(frame, duration) {
 		const scale_x = this.settings.sprite.scale_x * this.settings.sprite.frames_x;
 		const pos_y = this.settings.sprite.scale_y * -frame;
 
@@ -112,7 +116,7 @@ class Actor {
 		}
 
 		// Play the animation for this row or show the first frame if static
-		if(duration > 0 && speed > 0) {
+		if(duration > 0) {
 			this.data_actors_self.anim = this.element.animate([
 				{
 					backgroundPosition: px([0, pos_y])
@@ -120,10 +124,10 @@ class Actor {
 					backgroundPosition: px([scale_x, pos_y])
 				}
 			], {
-				duration: speed * 1000,
+				duration: duration * 1000,
 				direction: "normal",
 				easing: "steps(" + this.settings.sprite.frames_x + ")",
-				iterations: duration
+				iterations: Infinity
 			});
 			this.data_actors_self.anim.play();
 		} else {
@@ -142,8 +146,6 @@ class Actor {
 
 	// Sets a velocity which is applied each frame, used for walking
 	velocity_set_acceleration(x, y) {
-		const last_x = this.data_actors_self.acc[0];
-		const last_y = this.data_actors_self.acc[1];
 		if(!isNaN(x))
 			this.data_actors_self.acc[0] = x;
 		if(!isNaN(y))
@@ -152,25 +154,6 @@ class Actor {
 		// Start the interval function for physics updates
 		if(!this.interval_velocity)
 			this.interval_velocity = setInterval(this.velocity_update.bind(this), WORLD_RATE);
-
-		// Set the actor's sprite animation based on movement direction
-		// Animates if walking, static if we stopped unless idle pacing is enabled
-		if(this.data_actors_self.acc[0] > 0)
-			this.set_animation(1, Infinity, this.data_actors_self.acc[0]);
-		else if(this.data_actors_self.acc[0] < 0)
-			this.set_animation(3, Infinity, -this.data_actors_self.acc[0]);
-		else if(this.data_actors_self.acc[1] > 0)
-			this.set_animation(2, Infinity, this.data_actors_self.acc[1]);
-		else if(this.data_actors_self.acc[1] < 0)
-			this.set_animation(0, Infinity, -this.data_actors_self.acc[1]);
-		else if(last_x > 0)
-			this.set_animation(1, Infinity, this.settings.idle);
-		else if(last_x < 0)
-			this.set_animation(3, Infinity, this.settings.idle);
-		else if(last_y > 0)
-			this.set_animation(2, Infinity, this.settings.idle);
-		else if(last_y < 0)
-			this.set_animation(0, Infinity, this.settings.idle);
 	}
 
 	// Returns data regarding the surface this actor will touch at the given distance
@@ -281,11 +264,33 @@ class Actor {
 		this.data_actors_self.vel[1] -= transfer_y * friction;
 
 		// Stop movement updates once we reach the threshold for physics sleeping
-		if(Math.abs(this.data_actors_self.vel[0]) <= ACTOR_VELOCITY_SLEEP && Math.abs(this.data_actors_self.vel[1]) <= ACTOR_VELOCITY_SLEEP) {
+		if(Math.abs(this.data_actors_self.vel[0]) <= ACTOR_VELOCITY_SLEEP)
 			this.data_actors_self.vel[0] = 0;
+		if(Math.abs(this.data_actors_self.vel[1]) <= ACTOR_VELOCITY_SLEEP)
 			this.data_actors_self.vel[1] = 0;
+		if(this.data_actors_self.vel[0] == 0 && this.data_actors_self.vel[1] == 0) {
 			clearInterval(this.interval_velocity);
 			this.interval_velocity = null;
+		}
+
+		// Update the sprite angle and animation speed based on our current velocity
+		// Changing animation speed each frame would cause excessive resets, checks are stepified so updates only occur when the difference is beyond a threshold
+		// An exception exists when velocity changes from static (zero) to moving (non-zero)
+		// TODO: Is it possible to dynamically update CSS animation duration without resetting it? The stepping system could then be removed
+		const angle = Math.abs(this.data_actors_self.vel[0]) > 0 || Math.abs(this.data_actors_self.vel[1]) > 0 ? vec2ang(vector(this.data_actors_self.vel)) : vec2ang(vector(this.data_actors_self.acc));
+		const angle_changed = this.data_actors_self.angle != angle;
+		const speed = Math.abs(this.data_actors_self.vel[0]) + Math.abs(this.data_actors_self.vel[1]);
+		const speed_changed = Math.abs(this.data_actors_self.speed - speed) >= ACTOR_VELOCITY_STEP;
+		const speed_transitioned = this.data_actors_self.speed != speed && (this.data_actors_self.speed == 0 || speed == 0);
+		if(angle_changed || speed_changed || speed_transitioned) {
+			if(!isNaN(angle))
+				this.data_actors_self.angle = angle;
+			if(speed >= 0)
+				this.data_actors_self.speed = speed;
+
+			// Speed is the velocity multiplied by the actor's animation setting when moving, idle setting if standing
+			const duration = speed > 0 ? 1 / speed * this.settings.anim_moving : this.settings.anim_static;
+			this.set_animation(this.data_actors_self.angle, duration);
 		}
 	}
 
