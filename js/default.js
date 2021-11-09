@@ -38,6 +38,23 @@ function tileset_wall(x, y) {
 	};
 }
 
+// Overlays for outdoor map
+function overlays_outdoor() {
+	return [
+		{
+			image: "img/backgrounds/clouds.png",
+			scale: 512,
+			top: false,
+			scroll_x: 50,
+			scroll_y: 0
+		},
+		{
+			color: "#4fdfffef",
+			top: false
+		}
+	];
+}
+
 // Flags for character actors
 function flags_actor_character() {
 	return {
@@ -118,6 +135,7 @@ const map_outdoor = {
 	scale_x: 1024,
 	scale_y: 512,
 	perspective: 0.25,
+	overlays: overlays_outdoor(),
 	tilesets: {
 		terrains: [tileset_outdoor_terrain]
 	},

@@ -74,9 +74,9 @@ class Actor {
 		// Its value is never allowed to reach 1 by design as that would produce infinite zoom
 		const pos = this.data_actors_self.pos;
 		const map = maps[Object.keys(maps)[0]];
-		const element = map.element;
-		const target_x = (map.scale[0] / 2) - pos[0];
-		const target_y = (map.scale[1] / 2) - pos[1];
+		const element = map.element_view;
+		const target_x = (map.scale_x / 2) - pos[0];
+		const target_y = (map.scale_y / 2) - pos[1];
 		const target_z = 1 - 1 / (WORLD_ZOOM + (this.data_actors_self.layer * map.perspective));
 
 		// If a camera parameter wasn't previously set apply an instant update

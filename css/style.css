@@ -2,8 +2,6 @@
 	position: absolute;
 	overflow: hidden;
 
-	background-color: #cccccc;
-
 	image-rendering: pixelated;
 	image-rendering: crisp-edges;
 }
