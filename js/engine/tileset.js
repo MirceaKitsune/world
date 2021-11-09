@@ -85,6 +85,13 @@ class Tileset {
 			this.element_layers[layer].element_canvas.width = this.scale_x * this.settings.size;
 			this.element_layers[layer].element_canvas.height = this.scale_y * this.settings.size;
 			this.element_layers[layer].element.appendChild(this.element_layers[layer].element_canvas);
+
+			// If this tileset uses fog, apply the fog color as the background color of this layer's element
+			// If the fog setting is an array use the value for this height, if not it's a constant color
+			if(this.settings.fog) {
+				const fog = typeof this.settings.fog === "object" ? this.settings.fog[layer] : this.settings.fog;
+				this.element_layers[layer].element.style.backgroundColor = fog;
+			}
 		}
 
 		// Draw this tile on the canvas element at the indicated position, the last call is drawn on top

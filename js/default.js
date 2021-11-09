@@ -87,6 +87,7 @@ function flags_brush_grass() {
 const tileset_outdoor_terrain = {
 	image: "img/tilesets/lpc_terrain.png",
 	size: 32,
+	fog: "#dfefff0f",
 	brushes: [
 		{
 			density: 0.75,
