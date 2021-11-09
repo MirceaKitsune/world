@@ -1,5 +1,7 @@
 ACTOR_VELOCITY_SLEEP = 0.01;
 ACTOR_VELOCITY_STEP = 0.25;
+ACTOR_CAMERA_SLEEP = 0.1;
+ACTOR_CAMERA_SPEED = 0.05;
 
 class Actor {
 	constructor(x, y, settings, data_layers, data_actors, element) {
@@ -24,7 +26,9 @@ class Actor {
 		// TODO: We use an interval to check for spawn because actors may load before tiles, fix this by guaranteeing proper load order
 		this.interval_velocity = null;
 		this.interval_spawn = setInterval(this.spawn.bind(this), WORLD_RATE);
+		this.interval_camera = null;
 		this.camera = false;
+		this.camera_pos = [x / 2, y / 2];
 
 		// Set the boundaries within which this actor may travel
 		this.limit_x = x;
@@ -71,12 +75,25 @@ class Actor {
 		const scale_y = map.scale[1];
 		const target_x = (scale_x / 2) - pos[0];
 		const target_y = (scale_y / 2) - pos[1];
+		const difference_x = (this.camera_pos[0] + target_x) / 2;
+		const difference_y = (this.camera_pos[1] + target_y) / 2;
+
+		// Camera position: 0 = x, 1 = y, 2 = height
+		this.camera_pos[0] = this.camera_pos[0] + (target_x - this.camera_pos[0]) * ACTOR_CAMERA_SPEED;
+		this.camera_pos[1] = this.camera_pos[1] + (target_y - this.camera_pos[1]) * ACTOR_CAMERA_SPEED;
+		this.camera_pos[2] = WORLD_ZOOM;
+
+		// If the transition is close enough to the target position we can stop the check here
+		if(Math.abs(target_x - difference_x) < ACTOR_CAMERA_SLEEP && Math.abs(target_y - difference_y) < ACTOR_CAMERA_SLEEP) {
+			this.camera_pos[0] = target_x;
+			this.camera_pos[1] = target_y;
+
+			clearInterval(this.interval_camera);
+			this.interval_camera = null;
+		}
 
 		element.style.transformOrigin = "center";
-		element.style.transform = "perspective(0px) translate3d(" + target_x + "px, " + target_y + "px, " + WORLD_ZOOM + "px)";
-
-		clearInterval(this.interval_camera);
-		this.interval_camera = null;
+		element.style.transform = "perspective(0px) translate3d(" + this.camera_pos[0] + "px, " + this.camera_pos[1] + "px, " + this.camera_pos[2] + "px)";
 	}
 
 	// Check if a flag exists in the list and return its value if yes
@@ -309,8 +326,8 @@ class Actor {
 		this.element.style.top = this.data_actors_self.pos[1] - this.settings.sprite.scale_y;
 
 		// If this actor has the camera grabbed set a new camera position
-		if(this.camera)
-			this.camera_update();
+		if(this.camera && !this.interval_camera)
+			this.interval_camera = setInterval(this.camera_update.bind(this), WORLD_RATE);
 	}
 
 	// Sets the solidity level of this actor
