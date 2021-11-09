@@ -1,7 +1,9 @@
 // TODO: Make the seed customizable and predictable
-const WORLD_RATE = 1000 / 60; // 60 FPS
 const WORLD_SEED = Math.random() * 1000000;
-const WORLD_ZOOM = 1;
+const WORLD_RATE = 1000 / 60; // 60 FPS
+const WORLD_RESOLUTION_X = 1024;
+const WORLD_RESOLUTION_Y = 512;
+const WORLD_ZOOM = 0.5;
 
 // Returns a random number in a given range
 function random_range(min, max) {
@@ -61,4 +63,6 @@ function get_random(object) {
 // TODO: Move this to the proper place, possibly directly in index.html
 var main = document.createElement("div");
 main.setAttribute("class", "main");
+main.style.width = WORLD_RESOLUTION_X;
+main.style.height = WORLD_RESOLUTION_Y;
 document.body.appendChild(main);

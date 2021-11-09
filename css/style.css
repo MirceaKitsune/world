@@ -1,10 +1,9 @@
 .main {
-	left: 5%;
-	top: 5%;
-	width: 90%;
-	height: 90%;
-
 	position: absolute;
 	overflow: hidden;
+
 	background-color: #cccccc;
+
+	image-rendering: pixelated;
+	image-rendering: crisp-edges;
 }

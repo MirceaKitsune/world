@@ -24,6 +24,7 @@ class Actor {
 		// TODO: We use an interval to check for spawn because actors may load before tiles, fix this by guaranteeing proper load order
 		this.interval_velocity = null;
 		this.interval_spawn = setInterval(this.spawn.bind(this), WORLD_RATE);
+		this.camera = false;
 
 		// Set the boundaries within which this actor may travel
 		this.limit_x = x;
@@ -58,6 +59,24 @@ class Actor {
 		this.element.style.height = px([this.settings.sprite.scale_y]);
 
 		this.init();
+	}
+
+	// Focuses the camera on the position of the actor
+	camera_update() {
+		// TODO: Reference the active map once map management is implemented
+		const pos = this.data_actors_self.pos;
+		const map = maps[Object.keys(maps)[0]];
+		const element = map.element;
+		const scale_x = map.scale[0];
+		const scale_y = map.scale[1];
+		const target_x = (scale_x / 2) - pos[0];
+		const target_y = (scale_y / 2) - pos[1];
+
+		element.style.transformOrigin = "center";
+		element.style.transform = "perspective(0px) translate3d(" + target_x + "px, " + target_y + "px, " + WORLD_ZOOM + "px)";
+
+		clearInterval(this.interval_camera);
+		this.interval_camera = null;
 	}
 
 	// Check if a flag exists in the list and return its value if yes
@@ -288,6 +307,10 @@ class Actor {
 		// Offset the sprite so that the pivot point is centered horizontally and at the bottom vertically
 		this.element.style.left = this.data_actors_self.pos[0] - this.settings.sprite.scale_x / 2;
 		this.element.style.top = this.data_actors_self.pos[1] - this.settings.sprite.scale_y;
+
+		// If this actor has the camera grabbed set a new camera position
+		if(this.camera)
+			this.camera_update();
 	}
 
 	// Sets the solidity level of this actor

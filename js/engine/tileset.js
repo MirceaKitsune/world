@@ -19,8 +19,8 @@ class Tileset {
 		// Create the tileset element and append it to the parent element
 		this.element = document.createElement("div");
 		this.element.setAttribute("class", "tileset");
-		this.element.style.width = px([this.scale_x * this.settings.size * WORLD_ZOOM]);
-		this.element.style.height = px([this.scale_y * this.settings.size * WORLD_ZOOM]);
+		this.element.style.width = px([this.scale_x * this.settings.size]);
+		this.element.style.height = px([this.scale_y * this.settings.size]);
 		element.appendChild(this.element);
 	}
 
@@ -82,17 +82,14 @@ class Tileset {
 			this.element.appendChild(this.element_layers[layer].element);
 
 			this.element_layers[layer].element_canvas = document.createElement("canvas");
-			this.element_layers[layer].element_canvas.width = this.scale_x * this.settings.size * WORLD_ZOOM;
-			this.element_layers[layer].element_canvas.height = this.scale_y * this.settings.size * WORLD_ZOOM;
+			this.element_layers[layer].element_canvas.width = this.scale_x * this.settings.size;
+			this.element_layers[layer].element_canvas.height = this.scale_y * this.settings.size;
 			this.element_layers[layer].element.appendChild(this.element_layers[layer].element_canvas);
-
-			const ctx = this.element_layers[layer].element_canvas.getContext("2d");
-			ctx.imageSmoothingEnabled = false;
 		}
 
 		// Draw this tile on the canvas element at the indicated position, the last call is drawn on top
 		const pos = vector(tile);
 		const ctx = this.element_layers[layer].element_canvas.getContext("2d");
-		ctx.drawImage(this.image, pos.x * this.settings.size, pos.y * this.settings.size, this.settings.size, this.settings.size, x * this.settings.size * WORLD_ZOOM, y * this.settings.size * WORLD_ZOOM, this.settings.size * WORLD_ZOOM, this.settings.size * WORLD_ZOOM);
+		ctx.drawImage(this.image, pos.x * this.settings.size, pos.y * this.settings.size, this.settings.size, this.settings.size, x * this.settings.size, y * this.settings.size, this.settings.size, this.settings.size);
 	}
 }
