@@ -30,7 +30,7 @@ class Actor {
 		this.interval_spawn = setInterval(this.spawn.bind(this), WORLD_RATE);
 		this.interval_camera = null;
 		this.camera = false;
-		this.camera_pos = [x / 2, y / 2, 0];
+		this.camera_pos = [undefined, undefined, undefined];
 
 		// Set the boundaries within which this actor may travel
 		this.limit_x = x;
@@ -77,22 +77,23 @@ class Actor {
 		const element = map.element;
 		const target_x = (map.scale[0] / 2) - pos[0];
 		const target_y = (map.scale[1] / 2) - pos[1];
-		const target_height = 1 - 1 / (WORLD_ZOOM + (this.data_actors_self.layer * map.perspective));
+		const target_z = 1 - 1 / (WORLD_ZOOM + (this.data_actors_self.layer * map.perspective));
 
-		// Make the camera parameters slowly approach those of the target for transition effect
+		// If a camera parameter wasn't previously set apply an instant update
+		// Otherwise make the camera parameters slowly approach those of the target for transition effect
 		// Camera position: 0 = x, 1 = y, 2 = height
-		this.camera_pos[0] = this.camera_pos[0] + (target_x - this.camera_pos[0]) * ACTOR_CAMERA_SPEED_POSITION;
-		this.camera_pos[1] = this.camera_pos[1] + (target_y - this.camera_pos[1]) * ACTOR_CAMERA_SPEED_POSITION;
-		this.camera_pos[2] = this.camera_pos[2] + (target_height - this.camera_pos[2]) * ACTOR_CAMERA_SPEED_HEIGHT;
+		this.camera_pos[0] = isNaN(this.camera_pos[0]) ? target_x : this.camera_pos[0] + (target_x - this.camera_pos[0]) * ACTOR_CAMERA_SPEED_POSITION;
+		this.camera_pos[1] = isNaN(this.camera_pos[1]) ? target_y : this.camera_pos[1] + (target_y - this.camera_pos[1]) * ACTOR_CAMERA_SPEED_POSITION;
+		this.camera_pos[2] = isNaN(this.camera_pos[2]) ? target_z : this.camera_pos[2] + (target_z - this.camera_pos[2]) * ACTOR_CAMERA_SPEED_HEIGHT;
 
 		// If the transition is close enough to the target position we can snap to it and stop running the check
 		if(Math.abs(this.camera_pos[0] - target_x) < ACTOR_CAMERA_SLEEP_POSITION)
 			this.camera_pos[0] = target_x;
 		if(Math.abs(this.camera_pos[1] - target_y) < ACTOR_CAMERA_SLEEP_POSITION)
 			this.camera_pos[1] = target_y;
-		if(Math.abs(this.camera_pos[2] - target_height) < ACTOR_CAMERA_SLEEP_HEIGHT)
-			this.camera_pos[2] = target_height;
-		if(this.camera_pos[0] == target_x && this.camera_pos[1] == target_y && this.camera_pos[2] == target_height) {
+		if(Math.abs(this.camera_pos[2] - target_z) < ACTOR_CAMERA_SLEEP_HEIGHT)
+			this.camera_pos[2] = target_z;
+		if(this.camera_pos[0] == target_x && this.camera_pos[1] == target_y && this.camera_pos[2] == target_z) {
 			clearInterval(this.interval_camera);
 			this.interval_camera = null;
 		}
