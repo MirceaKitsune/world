@@ -15,6 +15,7 @@ class Map {
 		this.data_layers = [];
 		this.data_actors = [];
 		this.scale = [data.scale_x, data.scale_y];
+		this.perspective = data.perspective;
 
 		// Create terrain tilesets
 		this.tilesets_terrain = [];

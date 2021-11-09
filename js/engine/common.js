@@ -3,7 +3,7 @@ const WORLD_SEED = Math.random() * 1000000;
 const WORLD_RATE = 1000 / 60; // 60 FPS
 const WORLD_RESOLUTION_X = 1024;
 const WORLD_RESOLUTION_Y = 512;
-const WORLD_ZOOM = 0.5;
+const WORLD_ZOOM = 2;
 
 // Returns a random number in a given range
 function random_range(min, max) {

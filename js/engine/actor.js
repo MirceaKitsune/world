@@ -70,12 +70,14 @@ class Actor {
 	// Focuses the camera on the position of the actor
 	camera_update() {
 		// TODO: Reference the active map once map management is implemented
+		// The target height is kept in 0 to 1 range for easy control against the hardcoded 0px perspective: 0 is no zoom, 0.5 is double, etc
+		// Its value is never allowed to reach 1 by design as that would produce infinite zoom
 		const pos = this.data_actors_self.pos;
 		const map = maps[Object.keys(maps)[0]];
 		const element = map.element;
 		const target_x = (map.scale[0] / 2) - pos[0];
 		const target_y = (map.scale[1] / 2) - pos[1];
-		const target_height = WORLD_ZOOM / this.data_actors_self.layer;
+		const target_height = 1 - 1 / (WORLD_ZOOM + (this.data_actors_self.layer * map.perspective));
 
 		// Make the camera parameters slowly approach those of the target for transition effect
 		// Camera position: 0 = x, 1 = y, 2 = height
@@ -95,7 +97,7 @@ class Actor {
 			this.interval_camera = null;
 		}
 
-		element.style.transformOrigin = "center";
+		// Apply camera position and zoom by using a translate3d CSS transform on the world element
 		element.style.transform = "perspective(0px) translate3d(" + this.camera_pos[0] + "px, " + this.camera_pos[1] + "px, " + this.camera_pos[2] + "px)";
 	}
 

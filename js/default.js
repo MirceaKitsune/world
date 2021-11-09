@@ -117,6 +117,7 @@ const actor_player = {
 const map_outdoor = {
 	scale_x: 1024,
 	scale_y: 512,
+	perspective: 0.25,
 	tilesets: {
 		terrains: [tileset_outdoor_terrain]
 	},
