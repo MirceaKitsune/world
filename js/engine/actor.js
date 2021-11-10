@@ -75,9 +75,17 @@ class Actor {
 		const pos = this.data_actors_self.pos;
 		const map = maps[Object.keys(maps)[0]];
 		const element = map.element_view;
-		const target_x = (map.scale_x / 2) - pos[0];
-		const target_y = (map.scale_y / 2) - pos[1];
-		const target_z = 1 - 1 / (WORLD_ZOOM + (this.data_actors_self.layer * map.perspective));
+		var target_x = (map.scale_x / 2) - pos[0];
+		var target_y = (map.scale_y / 2) - pos[1];
+		var target_z = 1 - 1 / (WORLD_ZOOM + (this.data_actors_self.layer * map.perspective));
+
+		// If this map requests binding the camera, make sure the view can't poke past the map edges
+		if(map.bound) {
+			const bound_x = (map.scale_x / 2) - (WORLD_RESOLUTION_X / 2) * (1 - target_z);
+			const bound_y = (map.scale_y / 2) - (WORLD_RESOLUTION_Y / 2) * (1 - target_z);
+			target_x = Math.min(Math.max(target_x, -bound_x), bound_x);
+			target_y = Math.min(Math.max(target_y, -bound_y), bound_y);
+		}
 
 		// If a camera parameter wasn't previously set apply an instant update
 		// Otherwise make the camera parameters slowly approach those of the target for transition effect
@@ -177,7 +185,6 @@ class Actor {
 				easing: "steps(" + this.settings.sprite.frames_x + ")",
 				iterations: Infinity
 			});
-			this.data_actors_self.anim.play();
 		} else {
 			this.element.style.backgroundPosition = px([0, pos_y]);
 		}

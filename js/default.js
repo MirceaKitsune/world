@@ -136,6 +136,7 @@ const map_outdoor = {
 	scale_x: 1024,
 	scale_y: 512,
 	perspective: 0.25,
+	bound: true,
 	overlays: overlays_outdoor(),
 	tilesets: {
 		terrains: [tileset_outdoor_terrain]

@@ -8,6 +8,7 @@ class Map {
 		this.scale_x = data.scale_x;
 		this.scale_y = data.scale_y;
 		this.perspective = data.perspective;
+		this.bound = data.bound;
 
 		// Create the map element
 		this.element = document.createElement("div");
