@@ -6,23 +6,28 @@ ACTOR_CAMERA_SPEED_POSITION = 0.05;
 ACTOR_CAMERA_SPEED_HEIGHT = 0.025;
 
 class Actor {
-	constructor(x, y, settings, data_layers, data_actors, element) {
+	constructor(world, settings) {
+		// Actors are spawned by the World class and have an instance as their parent
+		// We work with the actors object from the parent World, changes made to it are reflected universally
+		// We also work with the layers object from the parent Map, this map is set later by the map_set function
+		this.world = world;
+		this.world_actors = this.world.actors;
+		this.map = null;
+		this.map_layers = [];
 		this.settings = settings;
-		this.data_layers = data_layers;
-		this.data_actors = data_actors;
 
 		// Reference and prepare public data referring to this actor
 		// All settings can be read from or written to using this reference
-		this.data_actors_self = data_actors[settings.name] = {};
-		this.data_actors_self.box = this.settings.box;
-		this.data_actors_self.pos = [0, 0];
-		this.data_actors_self.vel = [0, 0];
-		this.data_actors_self.acc = [0, 0];
-		this.data_actors_self.flags = [];
-		this.data_actors_self.movement = 0;
-		this.data_actors_self.angle = 0;
-		this.data_actors_self.layer = 0;
-		this.data_actors_self.anim = null;
+		this.world_actors_self = this.world_actors[settings.name] = {};
+		this.world_actors_self.box = this.settings.box;
+		this.world_actors_self.pos = [0, 0];
+		this.world_actors_self.vel = [0, 0];
+		this.world_actors_self.acc = [0, 0];
+		this.world_actors_self.flags = [];
+		this.world_actors_self.movement = 0;
+		this.world_actors_self.angle = 0;
+		this.world_actors_self.layer = 0;
+		this.world_actors_self.anim = null;
 
 		// Internal functions
 		// TODO: We use an interval to check for spawn because actors may load before tiles, fix this by guaranteeing proper load order
@@ -31,10 +36,8 @@ class Actor {
 		this.interval_camera = null;
 		this.camera = false;
 		this.camera_pos = [undefined, undefined, undefined];
-
-		// Set the boundaries within which this actor may travel
-		this.limit_x = x;
-		this.limit_y = y;
+		this.limit_x = 0;
+		this.limit_y = 0;
 
 		// The image file used by this actor, prepares the image and runs the main function once it loads
 		this.image = new Image();
@@ -45,7 +48,6 @@ class Actor {
 		this.element = document.createElement("div");
 		this.element.setAttribute("class", "sprite");
 		this.element.setAttribute("id", "sprite");
-		element.appendChild(this.element);
 
 		// Set default position and angle, the actor should be moved to a valid position by the spawn function
 		this.position_set(0, 0);
@@ -67,20 +69,38 @@ class Actor {
 		this.init();
 	}
 
+	// Remove the actor from the old map and attach it to the new one
+	map_set(map) {
+		// Detach this actor from the element of the previous map
+		if(this.map)
+			this.map.element_view.removeChild(this.element);
+
+		this.map = map;
+		this.map_layers = map.layers;
+		this.limit_x = this.map.scale_x;
+		this.limit_y = this.map.scale_y;
+
+		// Attach the actor to the element of the new map
+		this.map.element_view.appendChild(this.element);
+	}
+
 	// Focuses the camera on the position of the actor
 	camera_update() {
-		// TODO: Reference the active map once map management is implemented
+		// We require a map to be set in order to make changes to its element
+		if(!this.map)
+			return;
+
 		// The target height is kept in 0 to 1 range for easy control against the hardcoded 0px perspective: 0 is no zoom, 0.5 is double, etc
 		// Its value is never allowed to reach 1 by design as that would produce infinite zoom
-		const pos = this.data_actors_self.pos;
-		const map = maps[Object.keys(maps)[0]];
+		const pos = this.world_actors_self.pos;
+		const map = this.map;
 		const element = map.element_view;
 		var target_x = (map.scale_x / 2) - pos[0];
 		var target_y = (map.scale_y / 2) - pos[1];
-		var target_z = 1 - 1 / (WORLD_ZOOM + (this.data_actors_self.layer * map.perspective));
+		var target_z = 1 - 1 / (WORLD_ZOOM + (this.world_actors_self.layer * map.settings.perspective));
 
 		// If this map requests binding the camera, make sure the view can't poke past the map edges
-		if(map.bound) {
+		if(map.settings.bound) {
 			const bound_x = (map.scale_x / 2) - (WORLD_RESOLUTION_X / 2) * (1 - target_z);
 			const bound_y = (map.scale_y / 2) - (WORLD_RESOLUTION_Y / 2) * (1 - target_z);
 			target_x = Math.min(Math.max(target_x, -bound_x), bound_x);
@@ -123,10 +143,10 @@ class Actor {
 		// We want to get the topmost floor of each possible position, last valid tile overrides this layer
 		// Potential positions are stored as a keys with the last layer of the position as the value
 		var positions = {};
-		for(let layers in this.data_layers) {
-			for(let tiles in this.data_layers[layers]) {
+		for(let layers in this.map_layers) {
+			for(let tiles in this.map_layers[layers]) {
 				// We want the position to be the center of the tile
-				const tile = this.data_layers[layers][tiles];
+				const tile = this.map_layers[layers][tiles];
 				const center_x = tile[0] + (tile[2] - tile[0]) / 2;
 				const center_y = tile[1] + (tile[3] - tile[1]) / 2;
 				const center = [center_x, center_y];
@@ -140,7 +160,7 @@ class Actor {
 		}
 
 		// Skip if no valid positions were found this attempt
-		if(positions.length == 0)
+		if(Object.keys(positions).length == 0)
 			return;
 
 		// Extract a random position from the property and its topmost layer from the value
@@ -166,14 +186,14 @@ class Actor {
 		const pos_y = this.settings.sprite.scale_y * -frame;
 
 		// Cancel the existing animation
-		if(this.data_actors_self.anim) {
-			this.data_actors_self.anim.cancel();
-			this.data_actors_self.anim = null;
+		if(this.world_actors_self.anim) {
+			this.world_actors_self.anim.cancel();
+			this.world_actors_self.anim = null;
 		}
 
 		// Play the animation for this row or show the first frame if static
 		if(duration > 0) {
-			this.data_actors_self.anim = this.element.animate([
+			this.world_actors_self.anim = this.element.animate([
 				{
 					backgroundPosition: px([0, pos_y])
 				}, {
@@ -197,10 +217,10 @@ class Actor {
 		// Position: 0 = x, 1 = y
 		// Box: 0 = left, 1 = top, 2 = right, 3 = bottom
 		// Tile: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
-		const height = this.data_actors_self.layer;
-		const pos = this.data_actors_self.pos;
-		const box = this.data_actors_self.box;
-		const vel = this.data_actors_self.vel;
+		const height = this.world_actors_self.layer;
+		const pos = this.world_actors_self.pos;
+		const box = this.world_actors_self.box;
+		const vel = this.world_actors_self.vel;
 		const ofs_x = [pos[0] + box[0] + vel[0], pos[1] + box[1], pos[0] + box[2] + vel[0], pos[1] + box[3]];
 		const ofs_y = [pos[0] + box[0], pos[1] + box[1] + vel[1], pos[0] + box[2], pos[1] + box[3] + vel[1]];
 
@@ -212,9 +232,9 @@ class Actor {
 
 		// Go through the tiles on each layer and pick relevant data from tiles who's boundaries the actor is within
 		// This relies on layers being scanned in bottom to top order, topmost entries must be allowed to override lower ones
-		for(let layers in this.data_layers) {
-			for(let tiles in this.data_layers[layers]) {
-				const tile = this.data_layers[layers][tiles];
+		for(let layers in this.map_layers) {
+			for(let tiles in this.map_layers[layers]) {
+				const tile = this.map_layers[layers][tiles];
 				const touching_x = intersects(ofs_x, tile);
 				const touching_y = intersects(ofs_y, tile);
 				if(!touching_x && !touching_y)
@@ -245,18 +265,18 @@ class Actor {
 
 		// Apply changes to the actor based on what we determined
 		if(solid_x)
-			this.data_actors_self.vel[0] = 0;
+			this.world_actors_self.vel[0] = 0;
 		if(solid_y)
-			this.data_actors_self.vel[1] = 0;
+			this.world_actors_self.vel[1] = 0;
 		if(layer_path && layer)
 			this.layer_set(layer);
 		if(flags)
-			this.data_actors_self.flags = flags;
+			this.world_actors_self.flags = flags;
 	}
 
 	// Sets a velocity which is applied once, used for pushing objects
 	velocity_set_impulse(x, y) {
-		this.data_actors_self.vel = [this.data_actors_self.vel[0] + x, this.data_actors_self.vel[1] + y];
+		this.world_actors_self.vel = [this.world_actors_self.vel[0] + x, this.world_actors_self.vel[1] + y];
 
 		// Start the interval function for physics updates
 		if(!this.interval_velocity)
@@ -266,9 +286,9 @@ class Actor {
 	// Sets a velocity which is applied each frame, used for walking
 	velocity_set_acceleration(x, y) {
 		if(!isNaN(x))
-			this.data_actors_self.acc[0] = x;
+			this.world_actors_self.acc[0] = x;
 		if(!isNaN(y))
-			this.data_actors_self.acc[1] = y;
+			this.world_actors_self.acc[1] = y;
 
 		// Start the interval function for physics updates
 		if(!this.interval_velocity)
@@ -278,34 +298,34 @@ class Actor {
 	// Runs each frame when a velocity is set to preform updates, turns itself off once movement stops
 	velocity_update() {
 		// Apply acceleration
-		this.data_actors_self.vel[0] += this.data_actors_self.acc[0];
-		this.data_actors_self.vel[1] += this.data_actors_self.acc[1];
+		this.world_actors_self.vel[0] += this.world_actors_self.acc[0];
+		this.world_actors_self.vel[1] += this.world_actors_self.acc[1];
 
 		// Apply surface effects from the topmost tile we're about to touch this call
 		this.surface_update();
 
 		// Amount by which to convert the velocity to a change in position, halved by default
 		// This must never be larger than the velocity, if it passes zero and flips signs the actor would reverse direction instead of stopping
-		var transfer_x = this.data_actors_self.vel[0] / 2;
-		var transfer_y = this.data_actors_self.vel[1] / 2;
+		var transfer_x = this.world_actors_self.vel[0] / 2;
+		var transfer_y = this.world_actors_self.vel[1] / 2;
 
 		// Apply the transition to the new position of the actor
-		const pos_x = this.data_actors_self.pos[0] + transfer_x;
-		const pos_y = this.data_actors_self.pos[1] + transfer_y;
+		const pos_x = this.world_actors_self.pos[0] + transfer_x;
+		const pos_y = this.world_actors_self.pos[1] + transfer_y;
 		this.position_set(pos_x, pos_y);
 
 		// Determine the friction this actor is experiencing based on the surface they're moving on
 		// We lose the transition amount from the velocity based on friction
-		const friction = this.flag("friction", this.data_actors_self.flags);
-		this.data_actors_self.vel[0] -= transfer_x * friction;
-		this.data_actors_self.vel[1] -= transfer_y * friction;
+		const friction = this.flag("friction", this.world_actors_self.flags);
+		this.world_actors_self.vel[0] -= transfer_x * friction;
+		this.world_actors_self.vel[1] -= transfer_y * friction;
 
 		// Stop movement updates once we reach the threshold for physics sleeping
-		if(Math.abs(this.data_actors_self.vel[0]) <= ACTOR_VELOCITY_SLEEP)
-			this.data_actors_self.vel[0] = 0;
-		if(Math.abs(this.data_actors_self.vel[1]) <= ACTOR_VELOCITY_SLEEP)
-			this.data_actors_self.vel[1] = 0;
-		if(this.data_actors_self.vel[0] == 0 && this.data_actors_self.vel[1] == 0) {
+		if(Math.abs(this.world_actors_self.vel[0]) <= ACTOR_VELOCITY_SLEEP)
+			this.world_actors_self.vel[0] = 0;
+		if(Math.abs(this.world_actors_self.vel[1]) <= ACTOR_VELOCITY_SLEEP)
+			this.world_actors_self.vel[1] = 0;
+		if(this.world_actors_self.vel[0] == 0 && this.world_actors_self.vel[1] == 0) {
 			clearInterval(this.interval_velocity);
 			this.interval_velocity = null;
 		}
@@ -314,29 +334,29 @@ class Actor {
 		// Changing animation speed each frame would reset the animation, speeds are thus stepified to snap to a grid unit
 		// Angle is calculated from velocity when it's above zero, otherwise acceleration so we can turn around while standing
 		// TODO: Is it possible to dynamically update CSS animation duration without resetting it? The stepping system could then be removed
-		const movement_base = Math.max(Math.abs(this.data_actors_self.vel[0]), Math.abs(this.data_actors_self.vel[1]));
+		const movement_base = Math.max(Math.abs(this.world_actors_self.vel[0]), Math.abs(this.world_actors_self.vel[1]));
 		const movement = Math.round(movement_base / ACTOR_VELOCITY_STEP) * ACTOR_VELOCITY_STEP;
-		const angle_vel = movement > 0 ? this.data_actors_self.vel : this.data_actors_self.acc;
+		const angle_vel = movement > 0 ? this.world_actors_self.vel : this.world_actors_self.acc;
 		const angle = vec2ang(vector(angle_vel));
-		if(this.data_actors_self.movement != movement || this.data_actors_self.angle != angle) {
+		if(this.world_actors_self.movement != movement || this.world_actors_self.angle != angle) {
 			if(!isNaN(angle))
-				this.data_actors_self.angle = angle;
+				this.world_actors_self.angle = angle;
 			if(movement >= 0)
-				this.data_actors_self.movement = movement;
+				this.world_actors_self.movement = movement;
 
 			// Speed is the velocity multiplied by the actor's animation setting when moving, idle setting if standing
 			const duration = movement > 0 ? 1 / movement * this.settings.anim_moving : this.settings.anim_static;
-			this.animation(this.data_actors_self.angle, duration);
+			this.animation(this.world_actors_self.angle, duration);
 		}
 	}
 
 	// Teleports the actor to this position
 	position_set(x, y) {
-		this.data_actors_self.pos = [x, y];
+		this.world_actors_self.pos = [x, y];
 
 		// Offset the sprite so that the pivot point is centered horizontally and at the bottom vertically
-		this.element.style.left = this.data_actors_self.pos[0] - this.settings.sprite.scale_x / 2;
-		this.element.style.top = this.data_actors_self.pos[1] - this.settings.sprite.scale_y;
+		this.element.style.left = this.world_actors_self.pos[0] - this.settings.sprite.scale_x / 2;
+		this.element.style.top = this.world_actors_self.pos[1] - this.settings.sprite.scale_y;
 
 		// If this actor has the camera grabbed set a new camera position
 		if(this.camera && !this.interval_camera)
@@ -345,8 +365,8 @@ class Actor {
 
 	// Sets the solidity level of this actor
 	layer_set(layer) {
-		this.data_actors_self.layer = layer;
-		this.element.style.zIndex = this.data_actors_self.layer;
+		this.world_actors_self.layer = layer;
+		this.element.style.zIndex = this.world_actors_self.layer;
 
 		// If this actor has the camera grabbed set a new camera position
 		if(this.camera && !this.interval_camera)

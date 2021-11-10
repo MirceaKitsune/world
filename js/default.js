@@ -116,6 +116,18 @@ const tileset_outdoor_terrain = {
 	]
 };
 
+const map_outdoor = {
+	name: "outdoor",
+	scale_x: 1024,
+	scale_y: 512,
+	perspective: 0.25,
+	bound: true,
+	overlays: overlays_outdoor(),
+	tilesets: {
+		terrains: [tileset_outdoor_terrain]
+	}
+};
+
 const actor_player = {
 	name: "player",
 	acceleration: 0.5,
@@ -132,18 +144,4 @@ const actor_player = {
 	}
 };
 
-const map_outdoor = {
-	scale_x: 1024,
-	scale_y: 512,
-	perspective: 0.25,
-	bound: true,
-	overlays: overlays_outdoor(),
-	tilesets: {
-		terrains: [tileset_outdoor_terrain]
-	},
-	actors: {
-		players: [actor_player]
-	}
-};
-
-register_map("outdoor", map_outdoor);
+world([map_outdoor], [], actor_player);

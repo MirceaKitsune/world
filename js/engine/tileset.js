@@ -1,12 +1,15 @@
 class Tileset {
-	constructor(x, y, settings, data_layers, element) {
+	constructor(map, settings) {
+		// Tilesets are spawned by the Map class and have an instance as their parent
+		// We work with the layers object from the parent Map, changes made to it are reflected universally
+		this.map = map;
+		this.map_layers = this.map.layers;
 		this.settings = settings;
-		this.data_layers = data_layers;
 		this.element_layers = [];
 
 		// Set the scale of the tilemap so that it covers the range indicated by the parent
-		this.scale_x = Math.ceil(x / this.settings.size);
-		this.scale_y = Math.ceil(y / this.settings.size);
+		this.scale_x = Math.ceil(this.map.scale_x / this.settings.size);
+		this.scale_y = Math.ceil(this.map.scale_y / this.settings.size);
 
 		// To avoid incorrect draw order sort brushes based on their layer
 		this.settings.brushes.sort(function(a, b) { return a.layer - b.layer });
@@ -21,7 +24,7 @@ class Tileset {
 		this.element.setAttribute("class", "tileset");
 		this.element.style.width = px([this.scale_x * this.settings.size]);
 		this.element.style.height = px([this.scale_y * this.settings.size]);
-		element.appendChild(this.element);
+		this.map.element_view.appendChild(this.element);
 	}
 
 	// Generates features when the tileset is loaded, must be replaced by child classes
@@ -59,9 +62,9 @@ class Tileset {
 				y * this.settings.size + this.settings.size,
 				flags
 			];
-			if(!this.data_layers[layer])
-				this.data_layers[layer] = [];
-			this.data_layers[layer].push(data);
+			if(!this.map_layers[layer])
+				this.map_layers[layer] = [];
+			this.map_layers[layer].push(data);
 		}
 
 		// Tile: 0 = left, 1 = top

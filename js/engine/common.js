@@ -59,10 +59,3 @@ function get_random(object) {
 	}
 	return object;
 }
-
-// TODO: Move this to the proper place, possibly directly in index.html
-var main = document.createElement("div");
-main.setAttribute("class", "main");
-main.style.width = WORLD_RESOLUTION_X;
-main.style.height = WORLD_RESOLUTION_Y;
-document.body.appendChild(main);
