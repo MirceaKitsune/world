@@ -39,50 +39,46 @@ function tileset_wall(x, y) {
 }
 
 // Overlays for outdoor map
-function overlays_outdoor() {
-	return [
-		{
-			image: "img/backgrounds/clouds.png",
-			scale: 512,
-			top: false,
-			scroll_x: 50,
-			scroll_y: 0
-		},
-		{
-			color: "#4fdfffef",
-			top: false
-		}
-	];
-}
+const overlays_outdoor = [
+	{
+		image: "img/backgrounds/clouds.png",
+		scale: 512,
+		top: false,
+		scroll_x: 50,
+		scroll_y: 0
+	},
+	{
+		color: "#4fdfffef",
+		top: false
+	}
+];
 
 // Flags for character actors
-function flags_actor_character() {
-	return {
-		spawn: {
-			grass: 1
-		},
-		solid: {
-			wall: 1
-		},
-		path: {
-			path: 1
-		},
-		friction: {
-			path: 1,
-			grass: 0.625,
-			stone: 0.5
-		}
-	};
-}
+const flags_actor_character = {
+	spawn: {
+		grass: 1
+	},
+	solid: {
+		wall: 1
+	},
+	path: {
+		path: 1
+	},
+	friction: {
+		path: 1,
+		grass: 0.625,
+		dirt: 0.5,
+		stone: 0.5
+	}
+};
 
 // Flags for grass brushes
-function flags_brush_grass() {
-	return {
-		floor: ["grass", "floor"],
-		floor_path: ["grass", "path"],
-		wall: ["stone", "wall"]
-	}
-}
+const flags_brush_grass = {
+	floor: ["grass", "floor"],
+	floor_path: ["grass", "path"],
+	road: ["dirt", "road"],
+	wall: ["stone", "wall"]
+};
 
 const tileset_outdoor_terrain = {
 	image: "img/tilesets/lpc_terrain.png",
@@ -92,25 +88,28 @@ const tileset_outdoor_terrain = {
 		{
 			density: 0.75,
 			layer: 1,
-			path: 0,
-			flags: flags_brush_grass(),
+			roads: 0.5,
+			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(3, 0),
+			tiles_road: tileset_floor(0, 18),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
 			density: 0.5,
 			layer: 2,
-			path: 0.5,
-			flags: flags_brush_grass(),
+			roads: 0.5,
+			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(0, 0),
+			tiles_road: tileset_floor(3, 18),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
 			density: 0.25,
 			layer: 4,
-			path: 0.25,
-			flags: flags_brush_grass(),
+			roads: 0.5,
+			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(6, 0),
+			tiles_road: tileset_floor(6, 18),
 			tiles_wall: tileset_wall(3, 24)
 		}
 	]
@@ -122,7 +121,7 @@ const map_outdoor = {
 	scale_y: 512,
 	perspective: 0.25,
 	bound: true,
-	overlays: overlays_outdoor(),
+	overlays: overlays_outdoor,
 	tilesets: {
 		terrains: [tileset_outdoor_terrain]
 	}
@@ -134,7 +133,7 @@ const actor_player = {
 	anim_moving: 1,
 	anim_static: 0,
 	box: [-8, -8, 8, 8],
-	flags: flags_actor_character(),
+	flags: flags_actor_character,
 	sprite: {
 		image: "img/sprites/hero.png",
 		scale_x: 24,
