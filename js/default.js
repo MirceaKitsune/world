@@ -56,7 +56,7 @@ const overlays_outdoor = [
 // Flags for character actors
 const flags_actor_character = {
 	spawn: {
-		grass: 1
+		dirt: 1
 	},
 	solid: {
 		wall: 1
@@ -76,7 +76,13 @@ const flags_actor_character = {
 const flags_brush_grass = {
 	floor: ["grass", "floor"],
 	floor_path: ["grass", "path"],
-	road: ["dirt", "road"],
+	wall: ["stone", "wall"]
+};
+
+// Flags for dirt brushes
+const flags_brush_dirt = {
+	floor: ["dirt", "floor"],
+	floor_path: ["dirt", "path"],
 	wall: ["stone", "wall"]
 };
 
@@ -86,39 +92,49 @@ const tileset_outdoor_terrain = {
 	fog: "#dfefff0f",
 	brushes: [
 		{
-			density: 0.75,
+			density_terrain: 0.75,
+			density_road: 1,
+			paths: 0,
 			layer: 1,
-			roads: 0.5,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(3, 0),
-			tiles_road: tileset_floor(0, 18),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			density: 0.5,
+			density_terrain: 0.5,
+			density_road: 1,
+			paths: 0.5,
 			layer: 2,
-			roads: 0.5,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(0, 0),
-			tiles_road: tileset_floor(3, 18),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			density: 0.25,
+			density_terrain: 0.25,
+			density_road: 1,
+			paths: 0.25,
 			layer: 4,
-			roads: 0.5,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(6, 0),
-			tiles_road: tileset_floor(6, 18),
 			tiles_wall: tileset_wall(3, 24)
-		}
+		},
+		{
+			density_terrain: 0.75,
+			density_road: 0.1,
+			paths: 0,
+			layer: 1,
+			roads: 0.25,
+			flags: flags_brush_dirt,
+			tiles_floor: tileset_floor(0, 18),
+			tiles_wall: tileset_wall(3, 24)
+		},
 	]
 };
 
 const map_outdoor = {
 	name: "outdoor",
 	scale_x: 1024,
-	scale_y: 512,
+	scale_y: 1024,
 	perspective: 0.25,
 	bound: true,
 	overlays: overlays_outdoor,
