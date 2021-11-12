@@ -27,39 +27,42 @@ const TILE_WALL_RIGHT_CENTER = "right_center";
 const TILE_WALL_RIGHT_BOTTOM = "right_bottom";
 
 class TilesetTerrain extends Tileset {
-	// Returns noise at a given 2D position, algorithm for terrain floors
-	noise_type_floor(x, y, seed) {
-		return Math.abs(Math.sin(1 + ((1 + x) / (1 + y)) * seed));
-	}
+	// Returns true if this is a fully surrounded tile based on the appropriate noise levels
+	noise(x, y, seed, brush) {
+		// Returns the noise value at this 2D position, algorithm for floors
+		function pattern_floor(tile_x, tile_y) {
+			return Math.sin((1 / tile_x + 1 / tile_y) * seed);
+		}
 
-	// Returns noise at a given 2D position, algorithm for terrain roads
-	noise_type_road(x, y, seed) {
-		// TODO: This pattern currently only generates lines, improve it to support intersections and turns for roads
-		const lines_x = Math.abs(Math.sin((1 / x) * seed));
-		const lines_y = Math.abs(Math.cos((1 / y) * seed));
-		return Math.max(lines_x, lines_y);
-	}
+		// Returns the noise value at this 2D position, algorithm for roads
+		// TODO: This pattern currently generates plain lines, improve it to support intersections and turns for roads
+		function pattern_road(tile_x, tile_y) {
+			const lines_x = Math.sin((1 / tile_x) * seed);
+			const lines_y = Math.cos((1 / tile_y) * seed);
+			return Math.max(lines_x, lines_y);
+		}
 
-	// Returns true if this is a fully surrounded tile judging both noise levels
-	noise_surrounded(layer, x, y, seed, brush) {
-		const height_terrain = (1 - brush.density_terrain) ** 2;
-		const height_road = (1 - brush.density_road) ** 2;
-
-		if(this.noise_type_floor(x, y, seed) < height_terrain || this.noise_type_road(x, y, seed) < height_road)
-			return false;
-
-		const neighbors = this.neighbors(x, y);
-		const has = [
-			this.noise_type_floor(neighbors[0].x, neighbors[0].y, seed) >= height_terrain && this.noise_type_road(neighbors[0].x, neighbors[0].y, seed) >= height_road,
-			this.noise_type_floor(neighbors[1].x, neighbors[1].y, seed) >= height_terrain && this.noise_type_road(neighbors[1].x, neighbors[1].y, seed) >= height_road,
-			this.noise_type_floor(neighbors[2].x, neighbors[2].y, seed) >= height_terrain && this.noise_type_road(neighbors[2].x, neighbors[2].y, seed) >= height_road,
-			this.noise_type_floor(neighbors[3].x, neighbors[3].y, seed) >= height_terrain && this.noise_type_road(neighbors[3].x, neighbors[3].y, seed) >= height_road,
-			this.noise_type_floor(neighbors[4].x, neighbors[4].y, seed) >= height_terrain && this.noise_type_road(neighbors[4].x, neighbors[4].y, seed) >= height_road,
-			this.noise_type_floor(neighbors[5].x, neighbors[5].y, seed) >= height_terrain && this.noise_type_road(neighbors[5].x, neighbors[5].y, seed) >= height_road,
-			this.noise_type_floor(neighbors[6].x, neighbors[6].y, seed) >= height_terrain && this.noise_type_road(neighbors[6].x, neighbors[6].y, seed) >= height_road,
-			this.noise_type_floor(neighbors[7].x, neighbors[7].y, seed) >= height_terrain && this.noise_type_road(neighbors[7].x, neighbors[7].y, seed) >= height_road
-		];
-		return has[0] && has[1] && has[2] && has[3] && has[4] && has[5] && has[6] && has[7];
+		// Start the pattern from the bottom-right corner for added randomness and to avoid divisions by zero from neighbor checks at early positions
+		// Also offset the density check while keeping its sign to achieve a accurate ranges for proper artist control
+		// Both the noise value and erosion setting may range between -1 and 1, subtracting them fetches the pattern in the desired direction
+		x += this.scale_x;
+		y += this.scale_y;
+		const erosion_terrain = brush.erosion_terrain * Math.abs(brush.erosion_terrain);
+		const erosion_road = brush.erosion_road * 2;
+		if(Math.abs(erosion_terrain - pattern_floor(x, y)) <= 1 && Math.abs(erosion_road - pattern_road(x, y)) <= 1) {
+			const neighbors = this.neighbors(x, y);
+			return (
+				Math.abs(erosion_terrain - pattern_floor(neighbors[0].x, neighbors[0].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[0].x, neighbors[0].y)) <= 1 &&
+				Math.abs(erosion_terrain - pattern_floor(neighbors[1].x, neighbors[1].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[1].x, neighbors[1].y)) <= 1 &&
+				Math.abs(erosion_terrain - pattern_floor(neighbors[2].x, neighbors[2].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[2].x, neighbors[2].y)) <= 1 &&
+				Math.abs(erosion_terrain - pattern_floor(neighbors[3].x, neighbors[3].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[3].x, neighbors[3].y)) <= 1 &&
+				Math.abs(erosion_terrain - pattern_floor(neighbors[4].x, neighbors[4].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[4].x, neighbors[4].y)) <= 1 &&
+				Math.abs(erosion_terrain - pattern_floor(neighbors[5].x, neighbors[5].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[5].x, neighbors[5].y)) <= 1 &&
+				Math.abs(erosion_terrain - pattern_floor(neighbors[6].x, neighbors[6].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[6].x, neighbors[6].y)) <= 1 &&
+				Math.abs(erosion_terrain - pattern_floor(neighbors[7].x, neighbors[7].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[7].x, neighbors[7].y)) <= 1
+			);
+		}
+		return false;
 	}
 
 	// Sets a floor tile
@@ -132,20 +135,20 @@ class TilesetTerrain extends Tileset {
 				const draw_y = y - layer_end;
 
 				// Handle drawing of terrain tiles
-				if(this.noise_surrounded(layer_end, x, y, seed, brush)) {
+				if(this.noise(x, y, seed, brush)) {
 					// Draw floor center
 					this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CENTER);
 				} else {
 					const neighbors = this.neighbors(x, y);
 					const has = [
-						this.noise_surrounded(layer_end, neighbors[0].x, neighbors[0].y, seed, brush),
-						this.noise_surrounded(layer_end, neighbors[1].x, neighbors[1].y, seed, brush),
-						this.noise_surrounded(layer_end, neighbors[2].x, neighbors[2].y, seed, brush),
-						this.noise_surrounded(layer_end, neighbors[3].x, neighbors[3].y, seed, brush),
-						this.noise_surrounded(layer_end, neighbors[4].x, neighbors[4].y, seed, brush),
-						this.noise_surrounded(layer_end, neighbors[5].x, neighbors[5].y, seed, brush),
-						this.noise_surrounded(layer_end, neighbors[6].x, neighbors[6].y, seed, brush),
-						this.noise_surrounded(layer_end, neighbors[7].x, neighbors[7].y, seed, brush)
+						this.noise(neighbors[0].x, neighbors[0].y, seed, brush),
+						this.noise(neighbors[1].x, neighbors[1].y, seed, brush),
+						this.noise(neighbors[2].x, neighbors[2].y, seed, brush),
+						this.noise(neighbors[3].x, neighbors[3].y, seed, brush),
+						this.noise(neighbors[4].x, neighbors[4].y, seed, brush),
+						this.noise(neighbors[5].x, neighbors[5].y, seed, brush),
+						this.noise(neighbors[6].x, neighbors[6].y, seed, brush),
+						this.noise(neighbors[7].x, neighbors[7].y, seed, brush)
 					];
 
 					// Draw walls

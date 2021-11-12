@@ -56,7 +56,8 @@ const overlays_outdoor = [
 // Flags for character actors
 const flags_actor_character = {
 	spawn: {
-		dirt: 1
+		dirt: 1,
+		grass: 1
 	},
 	solid: {
 		wall: 1
@@ -65,10 +66,10 @@ const flags_actor_character = {
 		path: 1
 	},
 	friction: {
-		path: 1,
-		grass: 0.625,
+		stone: 0.5,
 		dirt: 0.5,
-		stone: 0.5
+		grass: 0.625,
+		path: 1
 	}
 };
 
@@ -91,9 +92,10 @@ const tileset_outdoor_terrain = {
 	size: 32,
 	fog: "#dfefff0f",
 	brushes: [
+		// Terrains
 		{
-			density_terrain: 0.75,
-			density_road: 1,
+			erosion_terrain: 0.125,
+			erosion_road: 0,
 			paths: 0,
 			layer: 1,
 			flags: flags_brush_grass,
@@ -101,8 +103,8 @@ const tileset_outdoor_terrain = {
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			density_terrain: 0.5,
-			density_road: 1,
+			erosion_terrain: 0.25,
+			erosion_road: -0.125,
 			paths: 0.5,
 			layer: 2,
 			flags: flags_brush_grass,
@@ -110,24 +112,26 @@ const tileset_outdoor_terrain = {
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			density_terrain: 0.25,
-			density_road: 1,
+			erosion_terrain: 0.75,
+			erosion_road: -0.125,
 			paths: 0.25,
 			layer: 4,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
+
+		// Roads
 		{
-			density_terrain: 0.75,
-			density_road: 0.1,
+			erosion_terrain: 0.125,
+			erosion_road: 0.75,
 			paths: 0,
 			layer: 1,
 			roads: 0.25,
 			flags: flags_brush_dirt,
 			tiles_floor: tileset_floor(0, 18),
 			tiles_wall: tileset_wall(3, 24)
-		},
+		}
 	]
 };
 
