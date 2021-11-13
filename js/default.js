@@ -56,8 +56,7 @@ const overlays_outdoor = [
 // Flags for character actors
 const flags_actor_character = {
 	spawn: {
-		dirt: 1,
-		grass: 1
+		dirt: 1
 	},
 	solid: {
 		wall: 1
@@ -94,7 +93,7 @@ const tileset_outdoor_terrain = {
 	brushes: [
 		// Terrains
 		{
-			erosion_terrain: 0.125,
+			erosion_terrain: 0.05,
 			erosion_road: 0,
 			paths: 0,
 			layer: 1,
@@ -103,8 +102,8 @@ const tileset_outdoor_terrain = {
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			erosion_terrain: 0.25,
-			erosion_road: -0.125,
+			erosion_terrain: 0.1,
+			erosion_road: -0.25,
 			paths: 0.5,
 			layer: 2,
 			flags: flags_brush_grass,
@@ -112,8 +111,8 @@ const tileset_outdoor_terrain = {
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			erosion_terrain: 0.75,
-			erosion_road: -0.125,
+			erosion_terrain: 0.5,
+			erosion_road: -0.25,
 			paths: 0.25,
 			layer: 4,
 			flags: flags_brush_grass,
@@ -123,7 +122,7 @@ const tileset_outdoor_terrain = {
 
 		// Roads
 		{
-			erosion_terrain: 0.125,
+			erosion_terrain: 0.05,
 			erosion_road: 0.75,
 			paths: 0,
 			layer: 1,

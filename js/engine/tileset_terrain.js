@@ -42,24 +42,32 @@ class TilesetTerrain extends Tileset {
 			return Math.max(lines_x, lines_y);
 		}
 
+		// Returns true when the noise level is greater than the amount required for activation
+		// The sine is delivered in a -1 to +1 range, squish it into 0 to 1 so we can easily compare against the erosion setting
+		// Negative values for the density setting mean we want the opposite pattern, terrain gets eroded where it would normally appear
+		// The the density check is squared to correct its range and get the expected amount of terrain for each value
+		function height(noise, amount) {
+			noise = (1 + noise) / 2;
+			amount = amount * Math.abs(amount);
+			return amount >= 0 ? noise >= +amount : 1 - noise >= -amount;
+		}
+
 		// Start the pattern from the bottom-right corner for added randomness and to avoid divisions by zero from neighbor checks at early positions
-		// Also offset the density check while keeping its sign to achieve a accurate ranges for proper artist control
-		// Both the noise value and erosion setting may range between -1 and 1, subtracting them fetches the pattern in the desired direction
 		x += this.scale_x;
 		y += this.scale_y;
-		const erosion_terrain = brush.erosion_terrain * Math.abs(brush.erosion_terrain);
-		const erosion_road = brush.erosion_road * 2;
-		if(Math.abs(erosion_terrain - pattern_floor(x, y)) <= 1 && Math.abs(erosion_road - pattern_road(x, y)) <= 1) {
+
+		// If this tile reaches the noise requirement, return true if all of its neighbors do too
+		if(height(pattern_floor(x, y), brush.erosion_terrain) && height(pattern_road(x, y), brush.erosion_road)) {
 			const neighbors = this.neighbors(x, y);
 			return (
-				Math.abs(erosion_terrain - pattern_floor(neighbors[0].x, neighbors[0].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[0].x, neighbors[0].y)) <= 1 &&
-				Math.abs(erosion_terrain - pattern_floor(neighbors[1].x, neighbors[1].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[1].x, neighbors[1].y)) <= 1 &&
-				Math.abs(erosion_terrain - pattern_floor(neighbors[2].x, neighbors[2].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[2].x, neighbors[2].y)) <= 1 &&
-				Math.abs(erosion_terrain - pattern_floor(neighbors[3].x, neighbors[3].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[3].x, neighbors[3].y)) <= 1 &&
-				Math.abs(erosion_terrain - pattern_floor(neighbors[4].x, neighbors[4].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[4].x, neighbors[4].y)) <= 1 &&
-				Math.abs(erosion_terrain - pattern_floor(neighbors[5].x, neighbors[5].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[5].x, neighbors[5].y)) <= 1 &&
-				Math.abs(erosion_terrain - pattern_floor(neighbors[6].x, neighbors[6].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[6].x, neighbors[6].y)) <= 1 &&
-				Math.abs(erosion_terrain - pattern_floor(neighbors[7].x, neighbors[7].y)) <= 1 && Math.abs(erosion_road - pattern_road(neighbors[7].x, neighbors[7].y)) <= 1
+				height(pattern_floor(neighbors[0].x, neighbors[0].y), brush.erosion_terrain) && height(pattern_road(neighbors[0].x, neighbors[0].y), brush.erosion_road) &&
+				height(pattern_floor(neighbors[1].x, neighbors[1].y), brush.erosion_terrain) && height(pattern_road(neighbors[1].x, neighbors[1].y), brush.erosion_road) &&
+				height(pattern_floor(neighbors[2].x, neighbors[2].y), brush.erosion_terrain) && height(pattern_road(neighbors[2].x, neighbors[2].y), brush.erosion_road) &&
+				height(pattern_floor(neighbors[3].x, neighbors[3].y), brush.erosion_terrain) && height(pattern_road(neighbors[3].x, neighbors[3].y), brush.erosion_road) &&
+				height(pattern_floor(neighbors[4].x, neighbors[4].y), brush.erosion_terrain) && height(pattern_road(neighbors[4].x, neighbors[4].y), brush.erosion_road) &&
+				height(pattern_floor(neighbors[5].x, neighbors[5].y), brush.erosion_terrain) && height(pattern_road(neighbors[5].x, neighbors[5].y), brush.erosion_road) &&
+				height(pattern_floor(neighbors[6].x, neighbors[6].y), brush.erosion_terrain) && height(pattern_road(neighbors[6].x, neighbors[6].y), brush.erosion_road) &&
+				height(pattern_floor(neighbors[7].x, neighbors[7].y), brush.erosion_terrain) && height(pattern_road(neighbors[7].x, neighbors[7].y), brush.erosion_road)
 			);
 		}
 		return false;
