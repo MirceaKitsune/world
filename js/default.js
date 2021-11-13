@@ -96,7 +96,7 @@ const tileset_outdoor_terrain_1 = {
 			erosion_terrain: 0.05,
 			erosion_road: 0,
 			paths: 0,
-			layer: 2,
+			layer: 1,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(3, 0),
 			tiles_wall: tileset_wall(0, 24)
@@ -105,7 +105,7 @@ const tileset_outdoor_terrain_1 = {
 			erosion_terrain: 0.1,
 			erosion_road: -0.175,
 			paths: 0.5,
-			layer: 3,
+			layer: 2,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(0, 0),
 			tiles_wall: tileset_wall(0, 24)
@@ -116,7 +116,7 @@ const tileset_outdoor_terrain_1 = {
 			erosion_terrain: 0.05,
 			erosion_road: 0.825,
 			paths: 0,
-			layer: 2,
+			layer: 1,
 			roads: 0.25,
 			flags: flags_brush_dirt,
 			tiles_floor: tileset_floor(0, 18),
@@ -144,7 +144,7 @@ const tileset_outdoor_terrain_2 = {
 			erosion_terrain: 0.1,
 			erosion_road: -0.175,
 			paths: 0.5,
-			layer: 3,
+			layer: 2,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)

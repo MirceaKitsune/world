@@ -66,22 +66,76 @@ class Actor {
 		this.init();
 	}
 
-	// Remove the actor from the old map and attach it to the new one
-	map_set(map, activate) {
+	// Removes the actor from the old map and attach it to the new one
+	map_set(map, x, y) {
 		// Detach this actor from the previous map
 		if(this.map) {
 			this.map.element_view.removeChild(this.element);
-			if(activate)
+			if(this.camera)
 				this.map.deactivate();
 		}
 
 		this.map = map;
 		this.map_layers = map.layers;
+		this.position_set(x, y);
+		this.camera_pos = [undefined, undefined, undefined];
 
 		// Attach the actor to the new map
 		this.map.element_view.appendChild(this.element);
-		if(activate)
+		if(this.camera)
 			this.map.activate();
+	}
+
+	// Determines if the current map should transport us to another map based on our location
+	map_move() {
+		// We require a map to be set in to check for other maps to move to
+		if(!this.map)
+			return;
+
+		// Check which map edges we are touching
+		// Angle, clockwise direction: 0 = top, 1 = right, 2 = bottom, 3 = left
+		const touching = [
+			this.data.pos[1] <= 0,
+			this.data.pos[0] >= this.map.scale.x,
+			this.data.pos[1] >= this.map.scale.y,
+			this.data.pos[0] <= 0
+		];
+
+		// Stop looking if we aren't in a position to move to another map
+		if(!touching[0] && !touching[1] && !touching[2] && !touching[3])
+			return;
+
+		// Determine the grid position of the map we should move to from this direction
+		var grid_x = this.map.grid.x;
+		var grid_y = this.map.grid.y;
+		if(touching[0])
+			grid_y -= 1;
+		if(touching[1])
+			grid_x += 1;
+		if(touching[2])
+			grid_y += 1;
+		if(touching[3])
+			grid_x -= 1;
+
+		// Fetch the map at this grid position if one exists
+		const grid = vector([grid_x, grid_y, this.map.grid.z]);
+		const map = this.world.map_at_grid(grid);
+		if(map) {
+			// Determine the position to apply to the player so they correctly come out the other end
+			var pos_x = this.data.pos[0];
+			var pos_y = this.data.pos[1];
+			if(touching[0])
+				pos_y = map.scale.y;
+			if(touching[1])
+				pos_x = 0;
+			if(touching[2])
+				pos_y = 0;
+			if(touching[3])
+				pos_x = map.scale.x;
+
+			// Apply the new map and position
+			this.map_set(map, pos_x, pos_y);
+		}
 	}
 
 	// Focuses the camera on the position of the actor
@@ -348,6 +402,9 @@ class Actor {
 			const duration = movement > 0 ? 1 / movement * this.settings.anim_moving : this.settings.anim_static;
 			this.animation(this.data.angle, duration);
 		}
+
+		// If the actor is touching a map border after being moved, transport them to the touched map
+		this.map_move();
 	}
 
 	// Teleports the actor to this position

@@ -56,7 +56,19 @@ class World {
 
 		// Pick a random map to spawn the player in
 		const map = get_random(this.maps);
-		object.map_set(map, true);
+		object.camera = true;
+		object.map_set(map, 0, 0);
+	}
+
+	// Returns the map located at the given grid position
+	map_at_grid(grid) {
+		for(let maps in this.maps) {
+			const map = this.maps[maps];
+			const map_grid = map.grid;
+			if(grid.x == map_grid.x && grid.y == map_grid.y && grid.z == map_grid.z)
+				return map;
+		}
+		return null;
 	}
 }
 

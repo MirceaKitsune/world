@@ -7,9 +7,6 @@ class ActorPlayer extends Actor {
 
 		// Pressed movement keys: -x = left, +x = right, -y = up, +y = down
 		this.keys = [0, 0];
-
-		// This is the player, the camera follows them
-		this.camera = true;
 	}
 
 	// Fires when a key is pressed
