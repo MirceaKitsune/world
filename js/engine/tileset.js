@@ -10,6 +10,8 @@ class Tileset {
 		// Set the scale of the tilemap so that it covers the range indicated by the parent
 		this.scale_x = Math.ceil(this.map.scale_x / this.settings.size);
 		this.scale_y = Math.ceil(this.map.scale_y / this.settings.size);
+		this.noise_x = this.map.noise_x;
+		this.noise_y = this.map.noise_y;
 
 		// To avoid incorrect draw order sort brushes based on their layer
 		this.settings.brushes.sort(function(a, b) { return a.layer - b.layer });

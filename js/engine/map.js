@@ -7,9 +7,11 @@ class Map {
 		this.settings = settings;
 		this.layers = [];
 
-		// Set the scale of our map from its settings
+		// Store the scale and noise settings of our map
 		this.scale_x = settings.scale_x;
 		this.scale_y = settings.scale_y;
+		this.noise_x = settings.noise_x;
+		this.noise_y = settings.noise_y;
 
 		// Create the map element
 		this.element = document.createElement("div");

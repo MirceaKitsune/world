@@ -103,7 +103,7 @@ const tileset_outdoor_terrain = {
 		},
 		{
 			erosion_terrain: 0.1,
-			erosion_road: -0.25,
+			erosion_road: -0.175,
 			paths: 0.5,
 			layer: 2,
 			flags: flags_brush_grass,
@@ -112,7 +112,7 @@ const tileset_outdoor_terrain = {
 		},
 		{
 			erosion_terrain: 0.5,
-			erosion_road: -0.25,
+			erosion_road: -0.175,
 			paths: 0.25,
 			layer: 4,
 			flags: flags_brush_grass,
@@ -123,7 +123,7 @@ const tileset_outdoor_terrain = {
 		// Roads
 		{
 			erosion_terrain: 0.05,
-			erosion_road: 0.75,
+			erosion_road: 0.825,
 			paths: 0,
 			layer: 1,
 			roads: 0.25,
@@ -135,9 +135,10 @@ const tileset_outdoor_terrain = {
 };
 
 const map_outdoor = {
-	name: "outdoor",
 	scale_x: 1024,
 	scale_y: 1024,
+	noise_x: 0,
+	noise_y: 0,
 	perspective: 0.25,
 	bound: true,
 	overlays: overlays_outdoor,
@@ -147,7 +148,6 @@ const map_outdoor = {
 };
 
 const actor_player = {
-	name: "player",
 	acceleration: 0.5,
 	anim_moving: 1,
 	anim_static: 0,
@@ -162,4 +162,5 @@ const actor_player = {
 	}
 };
 
-world([map_outdoor], [], actor_player);
+world.register_player(actor_player);
+world.register_map("outdoor", map_outdoor);

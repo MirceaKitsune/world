@@ -1,5 +1,5 @@
 class World {
-	constructor(maps, actors, player) {
+	constructor() {
 		// The base element everything in the world will be attached to
 		this.element = document.createElement("div");
 		this.element.setAttribute("class", "world");
@@ -7,35 +7,32 @@ class World {
 		this.element.style.height = WORLD_RESOLUTION_Y;
 		document.body.appendChild(this.element);
 
-		// Create maps
+		// World data storage objects
 		this.maps = {};
-		for(let map in maps) {
-			const settings = maps[map];
-			this.maps[settings.name] = new Map(this, settings);
-
-			// TODO: Only activate maps here until we have a real map management system
-			this.maps[settings.name].activate();
-		}
-
-		// Create actors
 		this.actors = {};
-		for(let actor in actors) {
-			const settings = actors[actor];
-			this.actors[settings.name] = new Actor(this, settings);
-		}
+		this.player = null;
+	}
 
-		// Create players
-		// As there's no multiplayer support only one player entity exists by design at the moment
-		this.player = new ActorPlayer(this, player);
+	// Register a new map
+	register_map(name, settings) {
+		this.maps[name] = new Map(this, settings);
 
 		// TODO: Only activate maps here until we have a real map management system
-		const map = this.maps[Object.keys(this.maps)[0]];
-		this.player.map_set(map);
+		this.maps[name].activate();
+		this.player.map_set(this.maps[name]);
+	}
+
+	// Register a new actor
+	register_actor(name, settings) {
+		this.actors[name] = new Actor(this, settings);
+	}
+
+	// Register a new player
+	register_player(settings) {
+		// As there's no multiplayer support at this time only one player entity is needed
+		this.player = new ActorPlayer(this, settings);
 	}
 }
 
-// Create the world with the given data
-// Only one world may exist at a time, this must never be ran more than once
-function world(maps, actors, player) {
-	new World(maps, actors, player);
-}
+// Global world object, only one world may exist at a time
+const world = new World();

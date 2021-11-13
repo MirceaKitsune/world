@@ -31,14 +31,14 @@ class TilesetTerrain extends Tileset {
 	noise(x, y, seed, brush) {
 		// Returns the noise value at this 2D position, algorithm for floors
 		function pattern_floor(tile_x, tile_y) {
-			return Math.sin((1 / tile_x + 1 / tile_y) * seed);
+			return Math.sin((tile_x + seed) * (tile_y + seed));
 		}
 
 		// Returns the noise value at this 2D position, algorithm for roads
 		// TODO: This pattern currently generates plain lines, improve it to support intersections and turns for roads
 		function pattern_road(tile_x, tile_y) {
-			const lines_x = Math.sin((1 / tile_x) * seed);
-			const lines_y = Math.cos((1 / tile_y) * seed);
+			const lines_x = Math.sin(tile_x + seed);
+			const lines_y = Math.cos(tile_y + seed);
 			return Math.max(lines_x, lines_y);
 		}
 
@@ -52,9 +52,9 @@ class TilesetTerrain extends Tileset {
 			return amount >= 0 ? noise >= +amount : 1 - noise >= -amount;
 		}
 
-		// Start the pattern from the bottom-right corner for added randomness and to avoid divisions by zero from neighbor checks at early positions
-		x += this.scale_x;
-		y += this.scale_y;
+		// Apply noise position to the location at which we check the noise level
+		x += this.noise_x;
+		y += this.noise_y;
 
 		// If this tile reaches the noise requirement, return true if all of its neighbors do too
 		if(height(pattern_floor(x, y), brush.erosion_terrain) && height(pattern_road(x, y), brush.erosion_road)) {
@@ -134,7 +134,6 @@ class TilesetTerrain extends Tileset {
 
 	// Produces terrain using the given brush
 	paint(layer_start, layer_end, brush) {
-		const seed = WORLD_SEED;
 		for(let x = 0; x < this.scale_x; x++) {
 			for(let y = 0; y < this.scale_y + layer_end; y++) {
 				// To simulate the height of the floor being offset by the wall, the floor layer is subtracted from the y position
@@ -143,20 +142,20 @@ class TilesetTerrain extends Tileset {
 				const draw_y = y - layer_end;
 
 				// Handle drawing of terrain tiles
-				if(this.noise(x, y, seed, brush)) {
+				if(this.noise(x, y, WORLD_SEED, brush)) {
 					// Draw floor center
 					this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CENTER);
 				} else {
 					const neighbors = this.neighbors(x, y);
 					const has = [
-						this.noise(neighbors[0].x, neighbors[0].y, seed, brush),
-						this.noise(neighbors[1].x, neighbors[1].y, seed, brush),
-						this.noise(neighbors[2].x, neighbors[2].y, seed, brush),
-						this.noise(neighbors[3].x, neighbors[3].y, seed, brush),
-						this.noise(neighbors[4].x, neighbors[4].y, seed, brush),
-						this.noise(neighbors[5].x, neighbors[5].y, seed, brush),
-						this.noise(neighbors[6].x, neighbors[6].y, seed, brush),
-						this.noise(neighbors[7].x, neighbors[7].y, seed, brush)
+						this.noise(neighbors[0].x, neighbors[0].y, WORLD_SEED, brush),
+						this.noise(neighbors[1].x, neighbors[1].y, WORLD_SEED, brush),
+						this.noise(neighbors[2].x, neighbors[2].y, WORLD_SEED, brush),
+						this.noise(neighbors[3].x, neighbors[3].y, WORLD_SEED, brush),
+						this.noise(neighbors[4].x, neighbors[4].y, WORLD_SEED, brush),
+						this.noise(neighbors[5].x, neighbors[5].y, WORLD_SEED, brush),
+						this.noise(neighbors[6].x, neighbors[6].y, WORLD_SEED, brush),
+						this.noise(neighbors[7].x, neighbors[7].y, WORLD_SEED, brush)
 					];
 
 					// Draw walls
