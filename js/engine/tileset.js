@@ -8,10 +8,15 @@ class Tileset {
 		this.element_layers = [];
 
 		// Set the scale of the tilemap so that it covers the range indicated by the parent
-		this.scale_x = Math.ceil(this.map.scale_x / this.settings.size);
-		this.scale_y = Math.ceil(this.map.scale_y / this.settings.size);
-		this.noise_x = this.map.noise_x;
-		this.noise_y = this.map.noise_y;
+		// The noise offset is the position of the map on the world grid
+		this.scale = {
+			x: Math.ceil(this.map.scale.x / this.settings.size),
+			y: Math.ceil(this.map.scale.y / this.settings.size)
+		};
+		this.offset = {
+			x: this.map.grid.x * this.map.scale.x,
+			y: this.map.grid.y * this.map.scale.y
+		};
 
 		// To avoid incorrect draw order sort brushes based on their layer
 		this.settings.brushes.sort(function(a, b) { return a.layer - b.layer });
@@ -24,8 +29,8 @@ class Tileset {
 		// Create the tileset element and append it to the parent element
 		this.element = document.createElement("div");
 		this.element.setAttribute("class", "tileset");
-		this.element.style.width = px([this.scale_x * this.settings.size]);
-		this.element.style.height = px([this.scale_y * this.settings.size]);
+		this.element.style.width = px([this.scale.x * this.settings.size]);
+		this.element.style.height = px([this.scale.y * this.settings.size]);
 		this.map.element_view.appendChild(this.element);
 	}
 
@@ -87,8 +92,8 @@ class Tileset {
 			this.element.appendChild(this.element_layers[layer].element);
 
 			this.element_layers[layer].element_canvas = document.createElement("canvas");
-			this.element_layers[layer].element_canvas.width = this.scale_x * this.settings.size;
-			this.element_layers[layer].element_canvas.height = this.scale_y * this.settings.size;
+			this.element_layers[layer].element_canvas.width = this.scale.x * this.settings.size;
+			this.element_layers[layer].element_canvas.height = this.scale.y * this.settings.size;
 			this.element_layers[layer].element.appendChild(this.element_layers[layer].element_canvas);
 
 			// If this tileset uses fog, apply the fog color as the background color of this layer's element

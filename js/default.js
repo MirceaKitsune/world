@@ -86,7 +86,46 @@ const flags_brush_dirt = {
 	wall: ["stone", "wall"]
 };
 
-const tileset_outdoor_terrain = {
+const tileset_outdoor_terrain_1 = {
+	image: "img/tilesets/lpc_terrain.png",
+	size: 32,
+	fog: "#dfefff0f",
+	brushes: [
+		// Terrains
+		{
+			erosion_terrain: 0.05,
+			erosion_road: 0,
+			paths: 0,
+			layer: 2,
+			flags: flags_brush_grass,
+			tiles_floor: tileset_floor(3, 0),
+			tiles_wall: tileset_wall(0, 24)
+		},
+		{
+			erosion_terrain: 0.1,
+			erosion_road: -0.175,
+			paths: 0.5,
+			layer: 3,
+			flags: flags_brush_grass,
+			tiles_floor: tileset_floor(0, 0),
+			tiles_wall: tileset_wall(0, 24)
+		},
+
+		// Roads
+		{
+			erosion_terrain: 0.05,
+			erosion_road: 0.825,
+			paths: 0,
+			layer: 2,
+			roads: 0.25,
+			flags: flags_brush_dirt,
+			tiles_floor: tileset_floor(0, 18),
+			tiles_wall: tileset_wall(0, 24)
+		}
+	]
+};
+
+const tileset_outdoor_terrain_2 = {
 	image: "img/tilesets/lpc_terrain.png",
 	size: 32,
 	fog: "#dfefff0f",
@@ -98,23 +137,14 @@ const tileset_outdoor_terrain = {
 			paths: 0,
 			layer: 1,
 			flags: flags_brush_grass,
-			tiles_floor: tileset_floor(3, 0),
+			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
 			erosion_terrain: 0.1,
 			erosion_road: -0.175,
 			paths: 0.5,
-			layer: 2,
-			flags: flags_brush_grass,
-			tiles_floor: tileset_floor(0, 0),
-			tiles_wall: tileset_wall(3, 24)
-		},
-		{
-			erosion_terrain: 0.5,
-			erosion_road: -0.175,
-			paths: 0.25,
-			layer: 4,
+			layer: 3,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)
@@ -128,24 +158,42 @@ const tileset_outdoor_terrain = {
 			layer: 1,
 			roads: 0.25,
 			flags: flags_brush_dirt,
-			tiles_floor: tileset_floor(0, 18),
+			tiles_floor: tileset_floor(3, 18),
 			tiles_wall: tileset_wall(3, 24)
 		}
 	]
 };
 
-const map_outdoor = {
-	scale_x: 1024,
-	scale_y: 1024,
-	noise_x: 0,
-	noise_y: 0,
-	perspective: 0.25,
+const map_outdoor_1 = {
+	temp_min: -1,
+	temp_max: 0,
+	perspective: 0.1,
 	bound: true,
 	overlays: overlays_outdoor,
 	tilesets: {
-		terrains: [tileset_outdoor_terrain]
+		terrains: [tileset_outdoor_terrain_1]
 	}
 };
+
+const map_outdoor_2 = {
+	temp_min: 0,
+	temp_max: 1,
+	perspective: 0.1,
+	bound: true,
+	overlays: overlays_outdoor,
+	tilesets: {
+		terrains: [tileset_outdoor_terrain_2]
+	}
+};
+
+const map_group_outdoor = {
+	scale_x: 1024,
+	scale_y: 1024,
+	maps_x: 4,
+	maps_y: 4,
+	height: 0,
+	maps: ["outdoor_1", "outdoor_2"]
+}
 
 const actor_player = {
 	acceleration: 0.5,
@@ -162,5 +210,8 @@ const actor_player = {
 	}
 };
 
-world.register_player(actor_player);
-world.register_map("outdoor", map_outdoor);
+world.register_data_map("outdoor_1", map_outdoor_1);
+world.register_data_map("outdoor_2", map_outdoor_2);
+world.register_data_actor("player", actor_player);
+world.spawn_map_group(map_group_outdoor);
+world.spawn_actor_player("player");

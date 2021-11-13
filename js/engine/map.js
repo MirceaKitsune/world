@@ -1,17 +1,15 @@
 class Map {
-	constructor(world, settings) {
+	constructor(world, settings, scale, grid) {
 		// Maps are spawned by the World class and have an instance as their parent
 		// The map stores layer data for tilemaps and actors, allowing the data to be communicated between individual objects
 		// Those arrays are used by child objects below, changes made by their instances are reflected here
+		// Maps are additionally given a scale and grid vector representing their position in the world
 		this.world = world;
 		this.settings = settings;
+		this.scale = scale;
+		this.grid = grid;
 		this.layers = [];
-
-		// Store the scale and noise settings of our map
-		this.scale_x = settings.scale_x;
-		this.scale_y = settings.scale_y;
-		this.noise_x = settings.noise_x;
-		this.noise_y = settings.noise_y;
+		this.active = false;
 
 		// Create the map element
 		this.element = document.createElement("div");
@@ -67,10 +65,10 @@ class Map {
 		// Center the map view element in the main element, both when it's smaller or when it is larger
 		this.element_view = document.createElement("div");
 		this.element_view.setAttribute("class", "map_view");
-		this.element_view.style.left = (WORLD_RESOLUTION_X / 2) - (settings.scale_x / 2);
-		this.element_view.style.top = (WORLD_RESOLUTION_Y / 2) - (settings.scale_y / 2);
-		this.element_view.style.width = px([settings.scale_x]);
-		this.element_view.style.height = px([settings.scale_y]);
+		this.element_view.style.left = (WORLD_RESOLUTION_X / 2) - (this.scale.x / 2);
+		this.element_view.style.top = (WORLD_RESOLUTION_Y / 2) - (this.scale.y / 2);
+		this.element_view.style.width = px([this.scale.x]);
+		this.element_view.style.height = px([this.scale.y]);
 		this.element.appendChild(this.element_view);
 
 		// Create terrain tilesets
@@ -82,10 +80,12 @@ class Map {
 	// Activate this map
 	activate() {
 		this.world.element.appendChild(this.element);
+		this.active = true;
 	}
 
 	// Deactivate this map
 	deactivate() {
 		this.world.element.removeChild(this.element);
+		this.active = false;
 	}
 }

@@ -52,9 +52,9 @@ class TilesetTerrain extends Tileset {
 			return amount >= 0 ? noise >= +amount : 1 - noise >= -amount;
 		}
 
-		// Apply noise position to the location at which we check the noise level
-		x += this.noise_x;
-		y += this.noise_y;
+		// Apply map grid position to the location at which we check the noise level
+		x += this.offset.x;
+		y += this.offset.y;
 
 		// If this tile reaches the noise requirement, return true if all of its neighbors do too
 		if(height(pattern_floor(x, y), brush.erosion_terrain) && height(pattern_road(x, y), brush.erosion_road)) {
@@ -134,8 +134,8 @@ class TilesetTerrain extends Tileset {
 
 	// Produces terrain using the given brush
 	paint(layer_start, layer_end, brush) {
-		for(let x = 0; x < this.scale_x; x++) {
-			for(let y = 0; y < this.scale_y + layer_end; y++) {
+		for(let x = 0; x < this.scale.x; x++) {
+			for(let y = 0; y < this.scale.y + layer_end; y++) {
 				// To simulate the height of the floor being offset by the wall, the floor layer is subtracted from the y position
 				// This offset must include an increase in the loop ranges above as we need to scan beyond layer boundaries
 				const draw_x = x;
