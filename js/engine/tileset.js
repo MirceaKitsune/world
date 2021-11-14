@@ -62,7 +62,7 @@ class Tileset {
 	tile_set(layer, x, y, tile, flags) {
 		// Data: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
 		if(flags) {
-			var data = [
+			const data = [
 				x * this.settings.size,
 				y * this.settings.size,
 				x * this.settings.size + this.settings.size,

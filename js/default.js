@@ -64,6 +64,9 @@ const flags_actor_character = {
 	path: {
 		path: 1
 	},
+	road: {
+		road: 1
+	},
 	friction: {
 		stone: 0.5,
 		dirt: 0.5,
@@ -81,7 +84,7 @@ const flags_brush_grass = {
 
 // Flags for dirt brushes
 const flags_brush_dirt = {
-	floor: ["dirt", "floor"],
+	floor: ["dirt", "floor", "road"],
 	floor_path: ["dirt", "path"],
 	wall: ["stone", "wall"]
 };

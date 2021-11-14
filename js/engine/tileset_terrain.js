@@ -28,17 +28,17 @@ const TILE_WALL_RIGHT_BOTTOM = "right_bottom";
 
 class TilesetTerrain extends Tileset {
 	// Returns true if this is a fully surrounded tile based on the appropriate noise levels
-	noise(x, y, seed, brush) {
+	noise(x, y, brush) {
 		// Returns the noise value at this 2D position, algorithm for floors
 		function pattern_floor(tile_x, tile_y) {
-			return Math.sin((tile_x + seed) * (tile_y + seed));
+			return Math.sin((tile_x + WORLD_SEED) * (tile_y + WORLD_SEED));
 		}
 
 		// Returns the noise value at this 2D position, algorithm for roads
 		// TODO: This pattern currently generates plain lines, improve it to support intersections and turns for roads
 		function pattern_road(tile_x, tile_y) {
-			const lines_x = Math.sin(tile_x + seed);
-			const lines_y = Math.cos(tile_y + seed);
+			const lines_x = Math.sin(tile_x + WORLD_SEED);
+			const lines_y = Math.cos(tile_y + WORLD_SEED);
 			return Math.max(lines_x, lines_y);
 		}
 
@@ -52,23 +52,21 @@ class TilesetTerrain extends Tileset {
 			return amount >= 0 ? noise >= +amount : 1 - noise >= -amount;
 		}
 
-		// Apply map grid position to the location at which we check the noise level
+		// If this tile reaches the noise requirement, return true if all of its neighbors do too
+		// We apply the grid position to the location at which we check noise level so connected maps have a continuous pattern
 		x += this.offset.x;
 		y += this.offset.y;
-
-		// If this tile reaches the noise requirement, return true if all of its neighbors do too
 		if(height(pattern_floor(x, y), brush.erosion_terrain) && height(pattern_road(x, y), brush.erosion_road)) {
 			const neighbors = this.neighbors(x, y);
-			return (
-				height(pattern_floor(neighbors[0].x, neighbors[0].y), brush.erosion_terrain) && height(pattern_road(neighbors[0].x, neighbors[0].y), brush.erosion_road) &&
-				height(pattern_floor(neighbors[1].x, neighbors[1].y), brush.erosion_terrain) && height(pattern_road(neighbors[1].x, neighbors[1].y), brush.erosion_road) &&
-				height(pattern_floor(neighbors[2].x, neighbors[2].y), brush.erosion_terrain) && height(pattern_road(neighbors[2].x, neighbors[2].y), brush.erosion_road) &&
-				height(pattern_floor(neighbors[3].x, neighbors[3].y), brush.erosion_terrain) && height(pattern_road(neighbors[3].x, neighbors[3].y), brush.erosion_road) &&
-				height(pattern_floor(neighbors[4].x, neighbors[4].y), brush.erosion_terrain) && height(pattern_road(neighbors[4].x, neighbors[4].y), brush.erosion_road) &&
-				height(pattern_floor(neighbors[5].x, neighbors[5].y), brush.erosion_terrain) && height(pattern_road(neighbors[5].x, neighbors[5].y), brush.erosion_road) &&
-				height(pattern_floor(neighbors[6].x, neighbors[6].y), brush.erosion_terrain) && height(pattern_road(neighbors[6].x, neighbors[6].y), brush.erosion_road) &&
-				height(pattern_floor(neighbors[7].x, neighbors[7].y), brush.erosion_terrain) && height(pattern_road(neighbors[7].x, neighbors[7].y), brush.erosion_road)
-			);
+			if(height(pattern_floor(neighbors[0].x, neighbors[0].y), brush.erosion_terrain) && height(pattern_road(neighbors[0].x, neighbors[0].y), brush.erosion_road))
+			if(height(pattern_floor(neighbors[1].x, neighbors[1].y), brush.erosion_terrain) && height(pattern_road(neighbors[1].x, neighbors[1].y), brush.erosion_road))
+			if(height(pattern_floor(neighbors[2].x, neighbors[2].y), brush.erosion_terrain) && height(pattern_road(neighbors[2].x, neighbors[2].y), brush.erosion_road))
+			if(height(pattern_floor(neighbors[3].x, neighbors[3].y), brush.erosion_terrain) && height(pattern_road(neighbors[3].x, neighbors[3].y), brush.erosion_road))
+			if(height(pattern_floor(neighbors[4].x, neighbors[4].y), brush.erosion_terrain) && height(pattern_road(neighbors[4].x, neighbors[4].y), brush.erosion_road))
+			if(height(pattern_floor(neighbors[5].x, neighbors[5].y), brush.erosion_terrain) && height(pattern_road(neighbors[5].x, neighbors[5].y), brush.erosion_road))
+			if(height(pattern_floor(neighbors[6].x, neighbors[6].y), brush.erosion_terrain) && height(pattern_road(neighbors[6].x, neighbors[6].y), brush.erosion_road))
+			if(height(pattern_floor(neighbors[7].x, neighbors[7].y), brush.erosion_terrain) && height(pattern_road(neighbors[7].x, neighbors[7].y), brush.erosion_road))
+				return true;
 		}
 		return false;
 	}
@@ -135,76 +133,77 @@ class TilesetTerrain extends Tileset {
 	// Produces terrain using the given brush
 	paint(layer_start, layer_end, brush) {
 		for(let x = 0; x < this.scale.x; x++) {
-			for(let y = 0; y < this.scale.y + layer_end; y++) {
+			for(let y = layer_start; y < this.scale.y + layer_end; y++) {
 				// To simulate the height of the floor being offset by the wall, the floor layer is subtracted from the y position
-				// This offset must include an increase in the loop ranges above as we need to scan beyond layer boundaries
+				// This must include an offset in the y loop range above as we need to scan beyond layer boundaries
 				const draw_x = x;
 				const draw_y = y - layer_end;
 
 				// Handle drawing of terrain tiles
-				if(this.noise(x, y, WORLD_SEED, brush)) {
+				if(this.noise(x, y, brush)) {
 					// Draw floor center
 					this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CENTER);
 				} else {
 					const neighbors = this.neighbors(x, y);
 					const has = [
-						this.noise(neighbors[0].x, neighbors[0].y, WORLD_SEED, brush),
-						this.noise(neighbors[1].x, neighbors[1].y, WORLD_SEED, brush),
-						this.noise(neighbors[2].x, neighbors[2].y, WORLD_SEED, brush),
-						this.noise(neighbors[3].x, neighbors[3].y, WORLD_SEED, brush),
-						this.noise(neighbors[4].x, neighbors[4].y, WORLD_SEED, brush),
-						this.noise(neighbors[5].x, neighbors[5].y, WORLD_SEED, brush),
-						this.noise(neighbors[6].x, neighbors[6].y, WORLD_SEED, brush),
-						this.noise(neighbors[7].x, neighbors[7].y, WORLD_SEED, brush)
+						this.noise(neighbors[0].x, neighbors[0].y, brush),
+						this.noise(neighbors[1].x, neighbors[1].y, brush),
+						this.noise(neighbors[2].x, neighbors[2].y, brush),
+						this.noise(neighbors[3].x, neighbors[3].y, brush),
+						this.noise(neighbors[4].x, neighbors[4].y, brush),
+						this.noise(neighbors[5].x, neighbors[5].y, brush),
+						this.noise(neighbors[6].x, neighbors[6].y, brush),
+						this.noise(neighbors[7].x, neighbors[7].y, brush)
 					];
+					if(has[0] || has[1] || has[2] || has[3] || has[4] || has[5] || has[6] || has[7]) {
+						// Draw walls
+						if(!has[1] && has[2] && !has[3])
+							this.tile_set_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, -1);
+						if(has[1])
+							this.tile_set_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, 0);
+						if(!has[1] && has[0] && !has[7])
+							this.tile_set_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, 1);
 
-					// Draw walls
-					if(!has[1] && has[2] && !has[3])
-						this.tile_set_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, -1);
-					if(has[1])
-						this.tile_set_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, 0);
-					if(!has[1] && has[0] && !has[7])
-						this.tile_set_wall(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, 1);
+						// Draw paths
+						if(has[4] && has[5] && has[6] && !has[3] && !has[7])
+							this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
+						if(has[2] && has[3] && has[4] && !has[1] && !has[5])
+							this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
+						if(has[0] && has[1] && has[2] && !has[3] && !has[7])
+							this.tile_set_path(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, layer_end);
+						if(has[0] && has[6] && has[7] && !has[1] && !has[5])
+							this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
 
-					// Draw paths
-					if(has[4] && has[5] && has[6] && !has[3] && !has[7])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
-					if(has[2] && has[3] && has[4] && !has[1] && !has[5])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
-					if(has[0] && has[1] && has[2] && !has[3] && !has[7])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, layer_end - layer_start - 1, layer_end);
-					if(has[0] && has[6] && has[7] && !has[1] && !has[5])
-						this.tile_set_path(layer_start, draw_x, draw_y, brush, 0, layer_end);
+						// Draw floor edges
+						if(has[5] && !has[3] && !has[7])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_EDGE_TOP);
+						if(has[7] && !has[1] && !has[5])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_EDGE_RIGHT);
+						if(has[1] && !has[3] && !has[7])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_EDGE_BOTTOM);
+						if(has[3] && !has[1] && !has[5])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_EDGE_LEFT);
 
-					// Draw floor edges
-					if(has[5] && !has[3] && !has[7])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_EDGE_TOP);
-					if(has[7] && !has[1] && !has[5])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_EDGE_RIGHT);
-					if(has[1] && !has[3] && !has[7])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_EDGE_BOTTOM);
-					if(has[3] && !has[1] && !has[5])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_EDGE_LEFT);
+						// Draw floor inner corners
+						if(has[5] && has[7] && !has[1] && !has[3])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_IN_BOTTOM_LEFT);
+						if(has[3] && has[5] && !has[1] && !has[7])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_IN_BOTTOM_RIGHT);
+						if(has[1] && has[7] && !has[3] && !has[5])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_IN_TOP_LEFT);
+						if(has[1] && has[3] && !has[5] && !has[7])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_IN_TOP_RIGHT);
 
-					// Draw floor inner corners
-					if(has[5] && has[7] && !has[1] && !has[3])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_IN_BOTTOM_LEFT);
-					if(has[3] && has[5] && !has[1] && !has[7])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_IN_BOTTOM_RIGHT);
-					if(has[1] && has[7] && !has[3] && !has[5])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_IN_TOP_LEFT);
-					if(has[1] && has[3] && !has[5] && !has[7])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_IN_TOP_RIGHT);
-
-					// Draw floor outer corners
-					if(has[0] && !has[1] && !has[7])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_OUT_BOTTOM_RIGHT);
-					if(has[2] && !has[1] && !has[3])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_OUT_BOTTOM_LEFT);
-					if(has[4] && !has[3] && !has[5])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_OUT_TOP_LEFT);
-					if(has[6] && !has[5] && !has[7])
-						this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_OUT_TOP_RIGHT);
+						// Draw floor outer corners
+						if(has[0] && !has[1] && !has[7])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_OUT_BOTTOM_RIGHT);
+						if(has[2] && !has[1] && !has[3])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_OUT_BOTTOM_LEFT);
+						if(has[4] && !has[3] && !has[5])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_OUT_TOP_LEFT);
+						if(has[6] && !has[5] && !has[7])
+							this.tile_set_floor(layer_end, draw_x, draw_y, brush, TILE_FLOOR_CORNER_OUT_TOP_RIGHT);
+					}
 				}
 			}
 		}

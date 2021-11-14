@@ -88,7 +88,7 @@ class Actor {
 
 	// Determines if the current map should transport us to another map based on our location
 	map_move() {
-		// We require a map to be set in to check for other maps to move to
+		// We require a current map to check for other maps it could lead to
 		if(!this.map)
 			return;
 
@@ -128,18 +128,29 @@ class Actor {
 		if(touching[3])
 			pos_x = map.scale.x;
 
-		// Apply the new map if we have a valid tile to step over on the same layer at the desired location
-		var has = false;
-		for(let layer in map.layers) {
-			for(let tiles in map.layers[layer]) {
-				const tile = map.layers[layer][tiles];
-				const box = [pos_x + this.data.box[0], pos_y + this.data.box[1], pos_x + this.data.box[2], pos_y + this.data.box[3]];
-				if(intersects(box, tile))
-					has = (layer == this.data.layer || this.flag("path", tile[4]) > 0) && this.flag("solid", tile[4]) <= 0;
-			}
+		// Check if we have a valid road tile at the current location on the same layer
+		var has_old = false;
+		const box_old = [this.data.pos[0] + this.data.box[0], this.data.pos[1] + this.data.box[1], this.data.pos[0] + this.data.box[2], this.data.pos[1] + this.data.box[3]];
+		for(let tiles in this.map.layers[this.data.layer]) {
+			const tile = this.map.layers[this.data.layer][tiles];
+			if(intersects(box_old, tile))
+				has_old = this.flag("road", tile[4]) > 0;
 		}
-		if(has)
-			this.map_set(map, pos_x, pos_y);
+		if(!has_old)
+			return
+
+		// Check if we have a valid road tile at the new location on the same layer
+		var has_new = false;
+		const box_new = [pos_x + this.data.box[0], pos_y + this.data.box[1], pos_x + this.data.box[2], pos_y + this.data.box[3]];
+		for(let tiles in map.layers[this.data.layer]) {
+			const tile = map.layers[this.data.layer][tiles];
+			if(intersects(box_new, tile))
+				has_new = this.flag("road", tile[4]) > 0;
+		}
+		if(!has_new)
+			return
+
+		this.map_set(map, pos_x, pos_y);
 	}
 
 	// Focuses the camera on the position of the actor
@@ -150,17 +161,14 @@ class Actor {
 
 		// The target height is kept in 0 to 1 range for easy control against the hardcoded 0px perspective: 0 is no zoom, 0.5 is double, etc
 		// Its value is never allowed to reach 1 by design as that would produce infinite zoom
-		const pos = this.data.pos;
-		const map = this.map;
-		const element = map.element_view;
-		var target_x = (map.scale.x / 2) - pos[0];
-		var target_y = (map.scale.y / 2) - pos[1];
-		var target_z = 1 - 1 / (WORLD_ZOOM + (this.data.layer * map.settings.perspective));
+		var target_x = (this.map.scale.x / 2) - this.data.pos[0];
+		var target_y = (this.map.scale.y / 2) - this.data.pos[1];
+		var target_z = 1 - 1 / (WORLD_ZOOM + (this.data.layer * this.map.settings.perspective));
 
 		// If this map requests binding the camera, make sure the view can't poke past the map edges
-		if(map.settings.bound) {
-			const bound_x = (map.scale.x / 2) - (WORLD_RESOLUTION_X / 2) * (1 - target_z);
-			const bound_y = (map.scale.y / 2) - (WORLD_RESOLUTION_Y / 2) * (1 - target_z);
+		if(this.map.settings.bound) {
+			const bound_x = (this.map.scale.x / 2) - (WORLD_RESOLUTION_X / 2) * (1 - target_z);
+			const bound_y = (this.map.scale.y / 2) - (WORLD_RESOLUTION_Y / 2) * (1 - target_z);
 			target_x = Math.min(Math.max(target_x, -bound_x), bound_x);
 			target_y = Math.min(Math.max(target_y, -bound_y), bound_y);
 		}
@@ -185,7 +193,7 @@ class Actor {
 		}
 
 		// Apply camera position and zoom by using a translate3d CSS transform on the world element
-		element.style.transform = "perspective(0px) translate3d(" + this.camera_pos[0] + "px, " + this.camera_pos[1] + "px, " + this.camera_pos[2] + "px)";
+		this.map.element_view.style.transform = "perspective(0px) translate3d(" + this.camera_pos[0] + "px, " + this.camera_pos[1] + "px, " + this.camera_pos[2] + "px)";
 	}
 
 	// Check if a flag exists in the list and return its value if yes
@@ -270,6 +278,10 @@ class Actor {
 
 	// Applies surface effects to the actor from the topmost surface we're about to touch given our current velocity
 	surface_update() {
+		// No movement means there's no collision to check for
+		if(this.data.vel[0] == 0 && this.data.vel[1] == 0)
+			return;
+
 		// The position we're interested in checking is the actor's current position plus the desired offsets
 		// We want to predict movements per direction, store bounding boxes with the X and Y offsets separately
 		// Position: 0 = x, 1 = y
@@ -352,22 +364,17 @@ class Actor {
 
 	// Runs each frame when a velocity is set to preform updates, turns itself off once movement stops
 	velocity_update() {
-		// Apply acceleration
+		// Apply acceleration then set surface effects for the tiles we're about to touch at our new velocity
 		this.data.vel[0] += this.data.acc[0];
 		this.data.vel[1] += this.data.acc[1];
-
-		// Apply surface effects from the topmost tile we're about to touch this call
 		this.surface_update();
+		this.map_move();
 
-		// Amount by which to convert the velocity to a change in position, halved by default
-		// This must never be larger than the velocity, if it passes zero and flips signs the actor would reverse direction instead of stopping
-		var transfer_x = this.data.vel[0] / 2;
-		var transfer_y = this.data.vel[1] / 2;
-
-		// Apply the transition to the new position of the actor
-		const pos_x = this.data.pos[0] + transfer_x;
-		const pos_y = this.data.pos[1] + transfer_y;
-		this.position_set(pos_x, pos_y);
+		// Amount by which to convert velocity to a change in position, halved per call by default
+		// This must never be larger than the velocity itself, if it passes zero and flips signs the actor will reverse direction instead of stopping
+		const transfer_x = this.data.vel[0] / 2;
+		const transfer_y = this.data.vel[1] / 2;
+		this.position_set(this.data.pos[0] + transfer_x, this.data.pos[1] + transfer_y);
 
 		// Determine the friction this actor is experiencing based on the surface they're moving on
 		// We lose the transition amount from the velocity based on friction
@@ -388,7 +395,6 @@ class Actor {
 		// Update the sprite angle and animation speed based on our current velocity
 		// Changing animation speed each frame would reset the animation, speeds are thus stepified to snap to a grid unit
 		// Angle is calculated from velocity when it's above zero, otherwise acceleration so we can turn around while standing
-		// TODO: Is it possible to dynamically update CSS animation duration without resetting it? The stepping system could then be removed
 		const movement_base = Math.max(Math.abs(this.data.vel[0]), Math.abs(this.data.vel[1]));
 		const movement = Math.round(movement_base / ACTOR_VELOCITY_STEP) * ACTOR_VELOCITY_STEP;
 		const angle_vel = movement > 0 ? this.data.vel : this.data.acc;
@@ -403,16 +409,12 @@ class Actor {
 			const duration = movement > 0 ? 1 / movement * this.settings.anim_moving : this.settings.anim_static;
 			this.animation(this.data.angle, duration);
 		}
-
-		// If the actor is touching a map border after being moved, transport them to the touched map
-		this.map_move();
 	}
 
 	// Teleports the actor to this position
 	position_set(x, y) {
-		this.data.pos = [x, y];
-
 		// Offset the sprite so that the pivot point is centered horizontally and at the bottom vertically
+		this.data.pos = [x, y];
 		this.element.style.left = this.data.pos[0] - this.settings.sprite.scale_x / 2;
 		this.element.style.top = this.data.pos[1] - this.settings.sprite.scale_y;
 
