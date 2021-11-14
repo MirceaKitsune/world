@@ -94,14 +94,7 @@ class Actor {
 
 		// Check which map edges we are touching
 		// Angle, clockwise direction: 0 = top, 1 = right, 2 = bottom, 3 = left
-		const touching = [
-			this.data.pos[1] <= 0,
-			this.data.pos[0] >= this.map.scale.x,
-			this.data.pos[1] >= this.map.scale.y,
-			this.data.pos[0] <= 0
-		];
-
-		// Stop looking if we aren't in a position to move to another map
+		const touching = [this.data.pos[1] <= 0, this.data.pos[0] >= this.map.scale.x, this.data.pos[1] >= this.map.scale.y, this.data.pos[0] <= 0];
 		if(!touching[0] && !touching[1] && !touching[2] && !touching[3])
 			return;
 
@@ -120,22 +113,33 @@ class Actor {
 		// Fetch the map at this grid position if one exists
 		const grid = vector([grid_x, grid_y, this.map.grid.z]);
 		const map = this.world.map_at_grid(grid);
-		if(map) {
-			// Determine the position to apply to the player so they correctly come out the other end
-			var pos_x = this.data.pos[0];
-			var pos_y = this.data.pos[1];
-			if(touching[0])
-				pos_y = map.scale.y;
-			if(touching[1])
-				pos_x = 0;
-			if(touching[2])
-				pos_y = 0;
-			if(touching[3])
-				pos_x = map.scale.x;
+		if(!map)
+			return;
 
-			// Apply the new map and position
-			this.map_set(map, pos_x, pos_y);
+		// Determine the position to apply to the player so they correctly come out the other end
+		var pos_x = this.data.pos[0];
+		var pos_y = this.data.pos[1];
+		if(touching[0])
+			pos_y = map.scale.y;
+		if(touching[1])
+			pos_x = 0;
+		if(touching[2])
+			pos_y = 0;
+		if(touching[3])
+			pos_x = map.scale.x;
+
+		// Apply the new map if we have a valid tile to step over on the same layer at the desired location
+		var has = false;
+		for(let layer in map.layers) {
+			for(let tiles in map.layers[layer]) {
+				const tile = map.layers[layer][tiles];
+				const box = [pos_x + this.data.box[0], pos_y + this.data.box[1], pos_x + this.data.box[2], pos_y + this.data.box[3]];
+				if(intersects(box, tile))
+					has = (layer == this.data.layer || this.flag("path", tile[4]) > 0) && this.flag("solid", tile[4]) <= 0;
+			}
 		}
+		if(has)
+			this.map_set(map, pos_x, pos_y);
 	}
 
 	// Focuses the camera on the position of the actor
@@ -272,11 +276,8 @@ class Actor {
 		// Box: 0 = left, 1 = top, 2 = right, 3 = bottom
 		// Tile: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
 		const height = this.data.layer;
-		const pos = this.data.pos;
-		const box = this.data.box;
-		const vel = this.data.vel;
-		const ofs_x = [pos[0] + box[0] + vel[0], pos[1] + box[1], pos[0] + box[2] + vel[0], pos[1] + box[3]];
-		const ofs_y = [pos[0] + box[0], pos[1] + box[1] + vel[1], pos[0] + box[2], pos[1] + box[3] + vel[1]];
+		const box_x = [this.data.pos[0] + this.data.box[0] + this.data.vel[0], this.data.pos[1] + this.data.box[1], this.data.pos[0] + this.data.box[2] + this.data.vel[0], this.data.pos[1] + this.data.box[3]];
+		const box_y = [this.data.pos[0] + this.data.box[0], this.data.pos[1] + this.data.box[1] + this.data.vel[1], this.data.pos[0] + this.data.box[2], this.data.pos[1] + this.data.box[3] + this.data.vel[1]];
 
 		var solid_x = true;
 		var solid_y = true;
@@ -289,8 +290,8 @@ class Actor {
 		for(let layers in this.map_layers) {
 			for(let tiles in this.map_layers[layers]) {
 				const tile = this.map_layers[layers][tiles];
-				const touching_x = intersects(ofs_x, tile);
-				const touching_y = intersects(ofs_y, tile);
+				const touching_x = intersects(box_x, tile);
+				const touching_y = intersects(box_y, tile);
 				if(!touching_x && !touching_y)
 					continue;
 
