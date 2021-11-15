@@ -1,11 +1,16 @@
 class World {
 	constructor() {
 		// The base element everything in the world will be attached to
-		this.element = document.createElement("div");
-		this.element.setAttribute("class", "world");
-		this.element.style.width = WORLD_RESOLUTION_X;
-		this.element.style.height = WORLD_RESOLUTION_Y;
-		document.body.appendChild(this.element);
+		this.element = html_create("div");
+		html_set(this.element, "class", "world");
+		html_css(this.element, "width", WORLD_RESOLUTION_X);
+		html_css(this.element, "height", WORLD_RESOLUTION_Y);
+		html_parent(this.element, document.body, true);
+
+		// The tint element used for transition effects
+		this.element_tint = html_create("div");
+		html_set(this.element_tint, "class", "world_tint");
+		html_parent(this.element_tint, this.element, true);
 
 		// Data storage objects
 		this.data_maps = {};
@@ -69,6 +74,12 @@ class World {
 				return map;
 		}
 		return null;
+	}
+
+	// Applies a fade effect to the tint
+	set_tint(show, time) {
+		// CSS animation: Animation name, animation time, animation iterations
+		html_css(this.element_tint, "animation", "world_tint_" + (show ? "off " : "on ") + time + "s 1");
 	}
 }
 

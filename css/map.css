@@ -18,6 +18,7 @@
 
 	background-repeat: repeat;
 	background-attachment: fixed;
+	pointer-events: none;
 }
 
 .map_view {

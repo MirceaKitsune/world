@@ -5,6 +5,29 @@ const WORLD_RESOLUTION_X = 1024;
 const WORLD_RESOLUTION_Y = 512;
 const WORLD_ZOOM = 2;
 
+// HTML helpers: Creates an element and returns the result
+function html_create(type) {
+	return document.createElement(type);
+}
+
+// HTML helpers: Attaches or detaches an element to or from another element
+function html_parent(element, parent, attach) {
+	if(attach)
+		parent.appendChild(element);
+	else
+		parent.removeChild(element);
+}
+
+// HTML helpers: Sets an attribute on an element
+function html_set(element, property, value) {
+	element.setAttribute(property, value);
+}
+
+// HTML helpers: Sets a CSS property on an element style
+function html_css(element, property, value) {
+	element.style[property] = value;
+}
+
 // Returns a random number in a given range
 function random_range(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);

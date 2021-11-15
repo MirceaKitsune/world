@@ -27,11 +27,11 @@ class Tileset {
 		this.image.onload = this.onload.bind(this);
 
 		// Create the tileset element and append it to the parent element
-		this.element = document.createElement("div");
-		this.element.setAttribute("class", "tileset");
-		this.element.style.width = px([this.scale.x * this.settings.size]);
-		this.element.style.height = px([this.scale.y * this.settings.size]);
-		this.map.element_view.appendChild(this.element);
+		this.element = html_create("div");
+		html_set(this.element, "class", "tileset");
+		html_css(this.element, "width", px([this.scale.x * this.settings.size]));
+		html_css(this.element, "height", px([this.scale.y * this.settings.size]));
+		html_parent(this.element, this.map.element_view, true);
 	}
 
 	// Generates features when the tileset is loaded, must be replaced by child classes
@@ -86,21 +86,21 @@ class Tileset {
 			this.element_layers[layer] = {};
 			this.element_layers[layer].tiles = [];
 
-			this.element_layers[layer].element = document.createElement("div");
-			this.element_layers[layer].element.setAttribute("class", "tileset");
-			this.element_layers[layer].element.style.zIndex = layer;
-			this.element.appendChild(this.element_layers[layer].element);
+			this.element_layers[layer].element = html_create("div");
+			html_set(this.element_layers[layer].element, "class", "tileset");
+			html_css(this.element_layers[layer].element, "zIndex", layer);
+			html_parent(this.element_layers[layer].element, this.element, true);
 
-			this.element_layers[layer].element_canvas = document.createElement("canvas");
-			this.element_layers[layer].element_canvas.width = this.scale.x * this.settings.size;
-			this.element_layers[layer].element_canvas.height = this.scale.y * this.settings.size;
-			this.element_layers[layer].element.appendChild(this.element_layers[layer].element_canvas);
+			this.element_layers[layer].element_canvas = html_create("canvas");
+			html_set(this.element_layers[layer].element_canvas, "width", this.scale.x * this.settings.size);
+			html_set(this.element_layers[layer].element_canvas, "height", this.scale.y * this.settings.size);
+			html_parent(this.element_layers[layer].element_canvas, this.element_layers[layer].element, true);
 
 			// If this tileset uses fog, apply the fog color as the background color of this layer's element
 			// If the fog setting is an array use the value for this height, if not it's a constant color
 			if(this.settings.fog) {
 				const fog = typeof this.settings.fog === "object" ? this.settings.fog[layer] : this.settings.fog;
-				this.element_layers[layer].element.style.backgroundColor = fog;
+				html_css(this.element_layers[layer].element, "backgroundColor", fog);
 			}
 		}
 

@@ -4,6 +4,7 @@ ACTOR_CAMERA_SLEEP_POSITION = 0.1;
 ACTOR_CAMERA_SLEEP_HEIGHT = 0.001;
 ACTOR_CAMERA_SPEED_POSITION = 0.05;
 ACTOR_CAMERA_SPEED_HEIGHT = 0.025;
+ACTOR_TRANSITION_TIME = 1;
 
 class Actor {
 	constructor(world, settings) {
@@ -33,6 +34,7 @@ class Actor {
 		this.interval_velocity = null;
 		this.interval_camera = null;
 		this.interval_spawn = setInterval(this.spawn.bind(this), WORLD_RATE);
+		this.timeout_map = null;
 		this.camera = false;
 		this.camera_pos = [undefined, undefined, undefined];
 
@@ -42,9 +44,8 @@ class Actor {
 		this.image.onload = this.onload.bind(this);
 
 		// Create the actor element and append it to the parent element
-		this.element = document.createElement("div");
-		this.element.setAttribute("class", "sprite");
-		this.element.setAttribute("id", "sprite");
+		this.element = html_create("div");
+		html_set(this.element, "class", "sprite");
 
 		// Set default position and angle, the actor should be moved to a valid position by the spawn function
 		this.position_set(0, 0);
@@ -58,10 +59,10 @@ class Actor {
 	// Executed when the sprite image finishes loading, calls the init function
 	onload() {
 		// Set the sprite of this actor on the element
-		this.element.style.backgroundImage = "url(" + this.image.src + ")";
-		this.element.style.backgroundSize = px([this.settings.sprite.scale_x * this.settings.sprite.frames_x, this.settings.sprite.scale_y * this.settings.sprite.frames_y]);
-		this.element.style.width = px([this.settings.sprite.scale_x]);
-		this.element.style.height = px([this.settings.sprite.scale_y]);
+		html_css(this.element, "backgroundImage", "url(" + this.image.src + ")");
+		html_css(this.element, "backgroundSize", px([this.settings.sprite.scale_x * this.settings.sprite.frames_x, this.settings.sprite.scale_y * this.settings.sprite.frames_y]));
+		html_css(this.element, "width", px([this.settings.sprite.scale_x]));
+		html_css(this.element, "height", px([this.settings.sprite.scale_y]));
 
 		this.init();
 	}
@@ -70,18 +71,19 @@ class Actor {
 	map_set(map, x, y) {
 		// Detach this actor from the previous map
 		if(this.map) {
-			this.map.element_view.removeChild(this.element);
+			html_parent(this.element, this.map.element_view, false);
 			if(this.camera)
 				this.map.deactivate();
 		}
 
+		// Set the new map and relevant effects
 		this.map = map;
 		this.map_layers = map.layers;
 		this.position_set(x, y);
 		this.camera_pos = [undefined, undefined, undefined];
 
 		// Attach the actor to the new map
-		this.map.element_view.appendChild(this.element);
+		html_parent(this.element, this.map.element_view, true);
 		if(this.camera)
 			this.map.activate();
 	}
@@ -92,9 +94,14 @@ class Actor {
 		if(!this.map)
 			return;
 
-		// Check which map edges we are touching
+		// Check which map edges we are touching, movement direction is also accounted for here
 		// Angle, clockwise direction: 0 = top, 1 = right, 2 = bottom, 3 = left
-		const touching = [this.data.pos[1] <= 0, this.data.pos[0] >= this.map.scale.x, this.data.pos[1] >= this.map.scale.y, this.data.pos[0] <= 0];
+		const touching = [
+			this.data.vel[1] < 0 && this.data.pos[1] <= 0,
+			this.data.vel[0] > 0 && this.data.pos[0] >= this.map.scale.x,
+			this.data.vel[1] > 0 && this.data.pos[1] >= this.map.scale.y,
+			this.data.vel[0] < 0 && this.data.pos[0] <= 0
+		];
 		if(!touching[0] && !touching[1] && !touching[2] && !touching[3])
 			return;
 
@@ -150,7 +157,15 @@ class Actor {
 		if(!has_new)
 			return
 
-		this.map_set(map, pos_x, pos_y);
+		// Set timeout and transition effects for changing the map
+		if(!this.timeout_map) {
+			this.world.set_tint(false, ACTOR_TRANSITION_TIME / 2);
+			this.timeout_map = setTimeout(function() {
+				this.world.set_tint(true, ACTOR_TRANSITION_TIME / 2);
+				this.map_set(map, pos_x, pos_y);
+				this.timeout_map = null;
+			}.bind(this), ACTOR_TRANSITION_TIME / 2 * 1000);
+		}
 	}
 
 	// Focuses the camera on the position of the actor
@@ -193,7 +208,7 @@ class Actor {
 		}
 
 		// Apply camera position and zoom by using a translate3d CSS transform on the world element
-		this.map.element_view.style.transform = "perspective(0px) translate3d(" + this.camera_pos[0] + "px, " + this.camera_pos[1] + "px, " + this.camera_pos[2] + "px)";
+		html_css(this.map.element_view, "transform", "perspective(0px) translate3d(" + this.camera_pos[0] + "px, " + this.camera_pos[1] + "px, " + this.camera_pos[2] + "px)");
 	}
 
 	// Check if a flag exists in the list and return its value if yes
@@ -272,7 +287,7 @@ class Actor {
 				iterations: Infinity
 			});
 		} else {
-			this.element.style.backgroundPosition = px([0, pos_y]);
+			html_css(this.element, "backgroundPosition", px([0, pos_y]));
 		}
 	}
 
@@ -415,8 +430,8 @@ class Actor {
 	position_set(x, y) {
 		// Offset the sprite so that the pivot point is centered horizontally and at the bottom vertically
 		this.data.pos = [x, y];
-		this.element.style.left = this.data.pos[0] - this.settings.sprite.scale_x / 2;
-		this.element.style.top = this.data.pos[1] - this.settings.sprite.scale_y;
+		html_css(this.element, "left", this.data.pos[0] - this.settings.sprite.scale_x / 2);
+		html_css(this.element, "top", this.data.pos[1] - this.settings.sprite.scale_y);
 
 		// If this actor has the camera grabbed set a new camera position
 		if(this.camera && !this.interval_camera)
@@ -426,7 +441,7 @@ class Actor {
 	// Sets the solidity level of this actor
 	layer_set(layer) {
 		this.data.layer = layer;
-		this.element.style.zIndex = this.data.layer;
+		html_css(this.element, "zIndex", this.data.layer);
 
 		// If this actor has the camera grabbed set a new camera position
 		if(this.camera && !this.interval_camera)

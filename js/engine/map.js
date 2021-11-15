@@ -12,21 +12,21 @@ class Map {
 		this.active = false;
 
 		// Create the map element
-		this.element = document.createElement("div");
-		this.element.setAttribute("class", "map");
+		this.element = html_create("div");
+		html_set(this.element, "class", "map");
 
 		// Add overlays to the map element
 		for(let overlays in this.settings.overlays) {
 			const overlay = this.settings.overlays[overlays];
 
 			// Create the overlay element and apply its settings
-			const element_overlay = document.createElement("div");
-			element_overlay.setAttribute("class", "map_overlay");
-			element_overlay.style.backgroundColor = overlay.color;
-			element_overlay.style.backgroundImage = "url(" +  overlay.image + ")";
-			element_overlay.style.backgroundSize = overlay.scale ? WORLD_ZOOM * overlay.scale + "px" : "cover";
-			element_overlay.style.zIndex = overlay.top ? 1 : 0;
-			this.element.appendChild(element_overlay);
+			const element_overlay = html_create("div");
+			html_set(element_overlay, "class", "map_overlay");
+			html_css(element_overlay, "backgroundColor", overlay.color);
+			html_css(element_overlay, "backgroundImage", "url(" +  overlay.image + ")");
+			html_css(element_overlay, "backgroundSize", overlay.scale ? WORLD_ZOOM * overlay.scale + "px" : "cover");
+			html_css(element_overlay, "zIndex", overlay.top ? 1 : 0);
+			html_parent(element_overlay, this.element, true);
 
 			// Animate the overlay background, x direction
 			if(overlay.scroll_x > 0) {
@@ -63,13 +63,13 @@ class Map {
 
 		// Create the map view element
 		// Center the map view element in the main element, both when it's smaller or when it is larger
-		this.element_view = document.createElement("div");
-		this.element_view.setAttribute("class", "map_view");
-		this.element_view.style.left = (WORLD_RESOLUTION_X / 2) - (this.scale.x / 2);
-		this.element_view.style.top = (WORLD_RESOLUTION_Y / 2) - (this.scale.y / 2);
-		this.element_view.style.width = px([this.scale.x]);
-		this.element_view.style.height = px([this.scale.y]);
-		this.element.appendChild(this.element_view);
+		this.element_view = html_create("div");
+		html_set(this.element_view, "class", "map_view");
+		html_css(this.element_view, "left", (WORLD_RESOLUTION_X / 2) - (this.scale.x / 2));
+		html_css(this.element_view, "top", (WORLD_RESOLUTION_Y / 2) - (this.scale.y / 2));
+		html_css(this.element_view, "width", px([this.scale.x]));
+		html_css(this.element_view, "height", px([this.scale.y]));
+		html_parent(this.element_view, this.element, true);
 
 		// Create terrain tilesets
 		this.tilesets_terrain = [];
@@ -79,13 +79,13 @@ class Map {
 
 	// Activate this map
 	activate() {
-		this.world.element.appendChild(this.element);
+		html_parent(this.element, this.world.element, true);
 		this.active = true;
 	}
 
 	// Deactivate this map
 	deactivate() {
-		this.world.element.removeChild(this.element);
+		html_parent(this.element, this.world.element, false);
 		this.active = false;
 	}
 }

@@ -5,3 +5,35 @@
 	image-rendering: pixelated;
 	image-rendering: crisp-edges;
 }
+
+.world_tint {
+	position: absolute;
+	overflow: hidden;
+
+	width: 100%;
+	height: 100%;
+
+	opacity: 0;
+	background-color: #000000;
+
+	z-index: 1;
+	pointer-events: none;
+}
+
+@keyframes world_tint_on {
+	0% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+@keyframes world_tint_off {
+	0% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
