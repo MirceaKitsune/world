@@ -1,3 +1,10 @@
+// TODO: Make the seed customizable and predictable
+const WORLD_SEED = Math.random() * 1000000;
+const WORLD_RATE = 1000 / 60; // 60 FPS
+const WORLD_RESOLUTION_X = 1024;
+const WORLD_RESOLUTION_Y = 512;
+const WORLD_ZOOM = 2;
+
 class World {
 	constructor() {
 		// The base element everything in the world will be attached to

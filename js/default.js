@@ -38,16 +38,32 @@ function tileset_wall(x, y) {
 	};
 }
 
-// Noise algorithm for terrain brushes
-const noise_terrain = function(x, y) {
-	return Math.sin((x + WORLD_SEED) * (y + WORLD_SEED));
+// Noise algorithm for terrains, ranges 0 to 1
+function noise_pattern_terrain(x, y) {
+	const noise = Math.sin((x + WORLD_SEED) * (y + WORLD_SEED));
+	return (1 + noise) / 2;
 }
 
-// Noise algorithm for road brushes
-const noise_road = function(x, y) {
+// Noise algorithm for roads, ranges 0 to 1
+function noise_pattern_road(x, y) {
 	const noise_x = Math.sin(x + WORLD_SEED);
 	const noise_y = Math.cos(y + WORLD_SEED);
-	return Math.max(noise_x, noise_y);
+	const noise = Math.max(noise_x, noise_y);
+	return (1 + noise) / 2;
+}
+
+// Noise function for terrain brushes
+// Islands above layer 1 get rarer with height and must avoid the road
+const noise_terrain = function(x, y, layer) {
+	if(layer > 1)
+		return noise_pattern_terrain(x, y) <= 0.9875 ** layer && noise_pattern_road(x, y) < 0.975;
+	else
+		return noise_pattern_terrain(x, y) <= 0.9995;
+}
+
+// Noise function for road brushes
+const noise_road = function(x, y, layer) {
+	return noise_pattern_road(x, y) >= 0.7;
 }
 
 // Overlays for outdoor map
@@ -106,27 +122,27 @@ const tileset_outdoor_terrain_1 = {
 	size: 32,
 	fog: "#dfefff0f",
 	brushes: [
-		// Terrains
+		// Terrain, base
 		{
-			noise: [{func: noise_terrain, val: 0.05}],
+			noise: noise_terrain,
 			paths: 0,
 			layer: 1,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(3, 0),
 			tiles_wall: tileset_wall(0, 24)
 		},
+		// Terrain, 1st island
 		{
-			noise: [{func: noise_terrain, val: 0.1}, {func: noise_road, val: -0.175}],
+			noise: noise_terrain,
 			paths: 0.5,
 			layer: 2,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(0, 0),
 			tiles_wall: tileset_wall(0, 24)
 		},
-
-		// Roads
+		// Road
 		{
-			noise: [{func: noise_terrain, val: 0.05}, {func: noise_road, val: 0.825}],
+			noise: noise_road,
 			paths: 0,
 			layer: 1,
 			roads: 0.25,
@@ -142,27 +158,27 @@ const tileset_outdoor_terrain_2 = {
 	size: 32,
 	fog: "#dfefff0f",
 	brushes: [
-		// Terrains
+		// Terrain, base
 		{
-			noise: [{func: noise_terrain, val: 0.05}],
+			noise: noise_terrain,
 			paths: 0,
 			layer: 1,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
+		// Terrain, 1st island
 		{
-			noise: [{func: noise_terrain, val: 0.1}, {func: noise_road, val: -0.175}],
+			noise: noise_terrain,
 			paths: 0.5,
 			layer: 2,
 			flags: flags_brush_grass,
 			tiles_floor: tileset_floor(6, 0),
 			tiles_wall: tileset_wall(3, 24)
 		},
-
-		// Roads
+		// Road
 		{
-			noise: [{func: noise_terrain, val: 0.05}, {func: noise_road, val: 0.825}],
+			noise: noise_road,
 			paths: 0,
 			layer: 1,
 			roads: 0.25,
