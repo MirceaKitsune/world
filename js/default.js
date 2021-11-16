@@ -148,7 +148,7 @@ const tileset_outdoor_terrain_1 = {
 			roads: 0.25,
 			flags: flags_brush_dirt,
 			tiles_floor: tileset_floor(0, 18),
-			tiles_wall: tileset_wall(0, 24)
+			tiles_wall: null
 		}
 	]
 };
@@ -184,7 +184,7 @@ const tileset_outdoor_terrain_2 = {
 			roads: 0.25,
 			flags: flags_brush_dirt,
 			tiles_floor: tileset_floor(3, 18),
-			tiles_wall: tileset_wall(3, 24)
+			tiles_wall: null
 		}
 	]
 };

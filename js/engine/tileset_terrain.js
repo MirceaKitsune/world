@@ -56,12 +56,10 @@ class TilesetTerrain extends Tileset {
 
 	// Sets a path tile
 	tile_set_path(x, y, layer, brush, length, target) {
-		if(brush.paths >= Math.random()) {
-			for(let i = layer; i >= layer - length; i--) {
-				const tile = get_random(brush.tiles_floor[TILE_FLOOR_PATH]);
-				const flags = brush.flags.floor_path;
-				this.tile_set(layer, x, y + (layer - i), tile, flags);
-			}
+		for(let i = layer; i >= layer - length; i--) {
+			const tile = get_random(brush.tiles_floor[TILE_FLOOR_PATH]);
+			const flags = brush.flags.floor_path;
+			this.tile_set(layer, x, y + (layer - i), tile, flags);
 		}
 	}
 
@@ -108,6 +106,9 @@ class TilesetTerrain extends Tileset {
 
 	// Produces terrain using the given brush
 	paint(layer_start, layer_end, brush) {
+		if(!brush.tiles_floor)
+			return;
+
 		for(let x = 0; x < this.scale.x; x++) {
 			for(let y = layer_start; y < this.scale.y + layer_end; y++) {
 				// To simulate the height of the floor being offset by the wall, the floor layer is subtracted from the y position
@@ -133,22 +134,26 @@ class TilesetTerrain extends Tileset {
 					];
 					if(has[0] || has[1] || has[2] || has[3] || has[4] || has[5] || has[6] || has[7]) {
 						// Draw walls
-						if(!has[1] && has[2] && !has[3])
-							this.tile_set_wall(draw_x, draw_y, layer_start, brush, layer_end - layer_start - 1, -1);
-						if(has[1])
-							this.tile_set_wall(draw_x, draw_y, layer_start, brush, layer_end - layer_start - 1, 0);
-						if(!has[1] && has[0] && !has[7])
-							this.tile_set_wall(draw_x, draw_y, layer_start, brush, layer_end - layer_start - 1, 1);
+						if(brush.tiles_wall) {
+							if(!has[1] && has[2] && !has[3])
+								this.tile_set_wall(draw_x, draw_y, layer_start, brush, layer_end - layer_start - 1, -1);
+							if(has[1])
+								this.tile_set_wall(draw_x, draw_y, layer_start, brush, layer_end - layer_start - 1, 0);
+							if(!has[1] && has[0] && !has[7])
+								this.tile_set_wall(draw_x, draw_y, layer_start, brush, layer_end - layer_start - 1, 1);
+						}
 
 						// Draw paths
-						if(has[4] && has[5] && has[6] && !has[3] && !has[7])
-							this.tile_set_path(draw_x, draw_y, layer_start, brush, 0, layer_end);
-						if(has[2] && has[3] && has[4] && !has[1] && !has[5])
-							this.tile_set_path(draw_x, draw_y, layer_start, brush, 0, layer_end);
-						if(has[0] && has[1] && has[2] && !has[3] && !has[7])
-							this.tile_set_path(draw_x, draw_y, layer_start, brush, layer_end - layer_start - 1, layer_end);
-						if(has[0] && has[6] && has[7] && !has[1] && !has[5])
-							this.tile_set_path(draw_x, draw_y, layer_start, brush, 0, layer_end);
+						if(brush.paths > Math.random()) {
+							if(has[4] && has[5] && has[6] && !has[3] && !has[7])
+								this.tile_set_path(draw_x, draw_y, layer_start, brush, 0, layer_end);
+							if(has[2] && has[3] && has[4] && !has[1] && !has[5])
+								this.tile_set_path(draw_x, draw_y, layer_start, brush, 0, layer_end);
+							if(has[0] && has[1] && has[2] && !has[3] && !has[7])
+								this.tile_set_path(draw_x, draw_y, layer_start, brush, layer_end - layer_start - 1, layer_end);
+							if(has[0] && has[6] && has[7] && !has[1] && !has[5])
+								this.tile_set_path(draw_x, draw_y, layer_start, brush, 0, layer_end);
+						}
 
 						// Draw floor edges
 						if(has[5] && !has[3] && !has[7])
@@ -188,19 +193,16 @@ class TilesetTerrain extends Tileset {
 	// Generator function for terrain
 	generate() {
 		// Paint the floors and walls of each brush
-		// When the next brush is calculated, it takes into account the height of the previous brush for wall height
+		// When the next brush is calculated, it takes into account the height of the previous layer for wall height
 		var layer_start = 0;
+		var layer_end = 0;
 		for(let brush in this.settings.brushes) {
 			const data_brush = this.settings.brushes[brush];
-			const layer_end = data_brush.layer;
-			this.paint(layer_start, layer_end, data_brush);
-
-			// Update the height of this brush if greater than that of the previous brush
-			// If lesser then we have a sorting error, abort as a safety measure
-			if(layer_end >= layer_start)
+			if(data_brush.layer > layer_end) {
 				layer_start = layer_end;
-			else
-				break;
+				layer_end = data_brush.layer;
+			}
+			this.paint(layer_start, layer_end, data_brush);
 		}
 	}
 }
