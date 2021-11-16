@@ -29,46 +29,38 @@ const TILE_WALL_RIGHT_BOTTOM = "right_bottom";
 class TilesetTerrain extends Tileset {
 	// Returns true if this is a fully surrounded tile based on the appropriate noise levels
 	noise(x, y, brush) {
-		// Returns the noise value at this 2D position, algorithm for floors
-		function pattern_floor(tile_x, tile_y) {
-			return Math.sin((tile_x + WORLD_SEED) * (tile_y + WORLD_SEED));
-		}
-
-		// Returns the noise value at this 2D position, algorithm for roads
-		// TODO: This pattern currently generates plain lines, improve it to support intersections and turns for roads
-		function pattern_road(tile_x, tile_y) {
-			const lines_x = Math.sin(tile_x + WORLD_SEED);
-			const lines_y = Math.cos(tile_y + WORLD_SEED);
-			return Math.max(lines_x, lines_y);
-		}
-
-		// Returns true when the noise level is greater than the amount required for activation
+		// Evaluates the brush's noise function and whether it reaches the associated value
 		// The sine is delivered in a -1 to +1 range, squish it into 0 to 1 so we can easily compare against the erosion setting
 		// Negative values for the density setting mean we want the opposite pattern, terrain gets eroded where it would normally appear
 		// The the density check is squared to correct its range and get the expected amount of terrain for each value
-		function height(noise, amount) {
-			noise = (1 + noise) / 2;
-			amount = amount * Math.abs(amount);
-			return amount >= 0 ? noise >= +amount : 1 - noise >= -amount;
+		function check(pos_x, pos_y) {
+			for(let noises in brush.noise) {
+				const noise = brush.noise[noises];
+				const check_noise = (1 + noise.func(pos_x, pos_y)) / 2;
+				const check_amount = noise.val * Math.abs(noise.val);
+				if(check_amount > 0 && check_noise < check_amount)
+					return false;
+				else if(check_amount < 0 && 1 - check_noise < -check_amount)
+					return false;
+			}
+			return true;
 		}
 
-		// If this tile reaches the noise requirement, return true if all of its neighbors do too
+		// This tile must test positive for the noise check
 		// We apply the grid position to the location at which we check noise level so connected maps have a continuous pattern
 		x += this.offset.x;
 		y += this.offset.y;
-		if(height(pattern_floor(x, y), brush.erosion_terrain) && height(pattern_road(x, y), brush.erosion_road)) {
-			const neighbors = this.neighbors(x, y);
-			if(height(pattern_floor(neighbors[0].x, neighbors[0].y), brush.erosion_terrain) && height(pattern_road(neighbors[0].x, neighbors[0].y), brush.erosion_road))
-			if(height(pattern_floor(neighbors[1].x, neighbors[1].y), brush.erosion_terrain) && height(pattern_road(neighbors[1].x, neighbors[1].y), brush.erosion_road))
-			if(height(pattern_floor(neighbors[2].x, neighbors[2].y), brush.erosion_terrain) && height(pattern_road(neighbors[2].x, neighbors[2].y), brush.erosion_road))
-			if(height(pattern_floor(neighbors[3].x, neighbors[3].y), brush.erosion_terrain) && height(pattern_road(neighbors[3].x, neighbors[3].y), brush.erosion_road))
-			if(height(pattern_floor(neighbors[4].x, neighbors[4].y), brush.erosion_terrain) && height(pattern_road(neighbors[4].x, neighbors[4].y), brush.erosion_road))
-			if(height(pattern_floor(neighbors[5].x, neighbors[5].y), brush.erosion_terrain) && height(pattern_road(neighbors[5].x, neighbors[5].y), brush.erosion_road))
-			if(height(pattern_floor(neighbors[6].x, neighbors[6].y), brush.erosion_terrain) && height(pattern_road(neighbors[6].x, neighbors[6].y), brush.erosion_road))
-			if(height(pattern_floor(neighbors[7].x, neighbors[7].y), brush.erosion_terrain) && height(pattern_road(neighbors[7].x, neighbors[7].y), brush.erosion_road))
-				return true;
-		}
-		return false;
+		if(!check(x, y))
+			return false;
+
+		// The neighbors of this tile must test positive for the noise check
+		const neighbors = this.neighbors(x, y);
+		for(let neighbor in neighbors)
+			if(!check(neighbors[neighbor].x, neighbors[neighbor].y))
+				return false;
+
+		// All checks passed, this is a valid tile we can draw to
+		return true;
 	}
 
 	// Sets a floor tile

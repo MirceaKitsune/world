@@ -38,6 +38,18 @@ function tileset_wall(x, y) {
 	};
 }
 
+// Noise algorithm for terrain brushes
+const noise_terrain = function(x, y) {
+	return Math.sin((x + WORLD_SEED) * (y + WORLD_SEED));
+}
+
+// Noise algorithm for road brushes
+const noise_road = function(x, y) {
+	const noise_x = Math.sin(x + WORLD_SEED);
+	const noise_y = Math.cos(y + WORLD_SEED);
+	return Math.max(noise_x, noise_y);
+}
+
 // Overlays for outdoor map
 const overlays_outdoor = [
 	{
@@ -96,8 +108,7 @@ const tileset_outdoor_terrain_1 = {
 	brushes: [
 		// Terrains
 		{
-			erosion_terrain: 0.05,
-			erosion_road: 0,
+			noise: [{func: noise_terrain, val: 0.05}],
 			paths: 0,
 			layer: 1,
 			flags: flags_brush_grass,
@@ -105,8 +116,7 @@ const tileset_outdoor_terrain_1 = {
 			tiles_wall: tileset_wall(0, 24)
 		},
 		{
-			erosion_terrain: 0.1,
-			erosion_road: -0.175,
+			noise: [{func: noise_terrain, val: 0.1}, {func: noise_road, val: -0.175}],
 			paths: 0.5,
 			layer: 2,
 			flags: flags_brush_grass,
@@ -116,8 +126,7 @@ const tileset_outdoor_terrain_1 = {
 
 		// Roads
 		{
-			erosion_terrain: 0.05,
-			erosion_road: 0.825,
+			noise: [{func: noise_terrain, val: 0.05}, {func: noise_road, val: 0.825}],
 			paths: 0,
 			layer: 1,
 			roads: 0.25,
@@ -135,8 +144,7 @@ const tileset_outdoor_terrain_2 = {
 	brushes: [
 		// Terrains
 		{
-			erosion_terrain: 0.05,
-			erosion_road: 0,
+			noise: [{func: noise_terrain, val: 0.05}],
 			paths: 0,
 			layer: 1,
 			flags: flags_brush_grass,
@@ -144,8 +152,7 @@ const tileset_outdoor_terrain_2 = {
 			tiles_wall: tileset_wall(3, 24)
 		},
 		{
-			erosion_terrain: 0.1,
-			erosion_road: -0.175,
+			noise: [{func: noise_terrain, val: 0.1}, {func: noise_road, val: -0.175}],
 			paths: 0.5,
 			layer: 2,
 			flags: flags_brush_grass,
@@ -155,8 +162,7 @@ const tileset_outdoor_terrain_2 = {
 
 		// Roads
 		{
-			erosion_terrain: 0.05,
-			erosion_road: 0.825,
+			noise: [{func: noise_terrain, val: 0.05}, {func: noise_road, val: 0.825}],
 			paths: 0,
 			layer: 1,
 			roads: 0.25,
