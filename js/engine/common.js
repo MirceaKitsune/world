@@ -54,8 +54,8 @@ function intersects(box1, box2) {
 // Returns a pixel string for HTML formatting
 function px(pixels) {
 	var s = ""
-	for(var i in pixels)
-		s += pixels[i] + "px ";
+	for(var pixel of pixels)
+		s += pixel + "px ";
 	return s;
 }
 

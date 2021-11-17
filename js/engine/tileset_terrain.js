@@ -39,8 +39,8 @@ class TilesetTerrain extends Tileset {
 
 		// The neighbors of this tile must test positive for the noise check
 		const neighbors = this.neighbors(x, y);
-		for(let neighbor in neighbors)
-			if(!brush.noise(neighbors[neighbor].x, neighbors[neighbor].y, layer))
+		for(let neighbor of neighbors)
+			if(!brush.noise(neighbor.x, neighbor.y, layer))
 				return false;
 
 		// All checks passed, this is a valid tile we can draw to
@@ -196,13 +196,12 @@ class TilesetTerrain extends Tileset {
 		// When the next brush is calculated, it takes into account the height of the previous layer for wall height
 		var layer_start = 0;
 		var layer_end = 0;
-		for(let brush in this.settings.brushes) {
-			const data_brush = this.settings.brushes[brush];
-			if(data_brush.layer > layer_end) {
+		for(let brush of this.settings.brushes) {
+			if(brush.layer > layer_end) {
 				layer_start = layer_end;
-				layer_end = data_brush.layer;
+				layer_end = brush.layer;
 			}
-			this.paint(layer_start, layer_end, data_brush);
+			this.paint(layer_start, layer_end, brush);
 		}
 	}
 }

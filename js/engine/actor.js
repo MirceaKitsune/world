@@ -9,12 +9,7 @@ ACTOR_TRANSITION_TIME = 1;
 class Actor {
 	constructor(world, settings) {
 		// Actors are spawned by the World class and have an instance as their parent
-		// We work with the actors object from the parent World, changes made to it are reflected universally
-		// We also work with the layers object from the parent Map, this map is set later by the map_set function
 		this.world = world;
-		this.world_actors = this.world.actors;
-		this.map = null;
-		this.map_layers = [];
 		this.settings = settings;
 
 		// Prepare public data used to describe the state of this actor in the world
@@ -35,6 +30,7 @@ class Actor {
 		this.interval_camera = null;
 		this.interval_spawn = setInterval(this.spawn.bind(this), WORLD_RATE);
 		this.timeout_map = null;
+		this.map = null;
 		this.camera = false;
 		this.camera_pos = [undefined, undefined, undefined];
 
@@ -78,7 +74,6 @@ class Actor {
 
 		// Set the new map and relevant effects
 		this.map = map;
-		this.map_layers = map.layers;
 		this.position_set(x, y);
 		this.camera_pos = [undefined, undefined, undefined];
 
@@ -138,22 +133,18 @@ class Actor {
 		// Check if we have a valid road tile at the current location on the same layer
 		var has_old = false;
 		const box_old = [this.data.pos[0] + this.data.box[0], this.data.pos[1] + this.data.box[1], this.data.pos[0] + this.data.box[2], this.data.pos[1] + this.data.box[3]];
-		for(let tiles in this.map.layers[this.data.layer]) {
-			const tile = this.map.layers[this.data.layer][tiles];
+		for(let tile of this.map.tileset.layers[this.data.layer])
 			if(intersects(box_old, tile))
 				has_old = this.flag("road", tile[4]) > 0;
-		}
 		if(!has_old)
 			return
 
 		// Check if we have a valid road tile at the new location on the same layer
 		var has_new = false;
 		const box_new = [pos_x + this.data.box[0], pos_y + this.data.box[1], pos_x + this.data.box[2], pos_y + this.data.box[3]];
-		for(let tiles in map.layers[this.data.layer]) {
-			const tile = map.layers[this.data.layer][tiles];
+		for(let tile of map.tileset.layers[this.data.layer])
 			if(intersects(box_new, tile))
 				has_new = this.flag("road", tile[4]) > 0;
-		}
 		if(!has_new)
 			return
 
@@ -161,8 +152,8 @@ class Actor {
 		if(!this.timeout_map) {
 			this.world.set_tint(false, ACTOR_TRANSITION_TIME / 2);
 			this.timeout_map = setTimeout(function() {
-				this.world.set_tint(true, ACTOR_TRANSITION_TIME / 2);
 				this.map_set(map, pos_x, pos_y);
+				this.world.set_tint(true, ACTOR_TRANSITION_TIME / 2);
 				this.timeout_map = null;
 			}.bind(this), ACTOR_TRANSITION_TIME / 2 * 1000);
 		}
@@ -224,10 +215,9 @@ class Actor {
 		// We want to get the topmost floor of each possible position, last valid tile overrides this layer
 		// Potential positions are stored as a keys with the last layer of the position as the value
 		var positions = {};
-		for(let layers in this.map_layers) {
-			for(let tiles in this.map_layers[layers]) {
+		for(let layers in this.map.tileset.layers) {
+			for(let tile of this.map.tileset.layers[layers]) {
 				// We want the position to be the center of the tile
-				const tile = this.map_layers[layers][tiles];
 				const center_x = tile[0] + (tile[2] - tile[0]) / 2;
 				const center_y = tile[1] + (tile[3] - tile[1]) / 2;
 				const center = [center_x, center_y];
@@ -302,7 +292,6 @@ class Actor {
 		// Position: 0 = x, 1 = y
 		// Box: 0 = left, 1 = top, 2 = right, 3 = bottom
 		// Tile: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
-		const height = this.data.layer;
 		const box_x = [this.data.pos[0] + this.data.box[0] + this.data.vel[0], this.data.pos[1] + this.data.box[1], this.data.pos[0] + this.data.box[2] + this.data.vel[0], this.data.pos[1] + this.data.box[3]];
 		const box_y = [this.data.pos[0] + this.data.box[0], this.data.pos[1] + this.data.box[1] + this.data.vel[1], this.data.pos[0] + this.data.box[2], this.data.pos[1] + this.data.box[3] + this.data.vel[1]];
 
@@ -314,9 +303,8 @@ class Actor {
 
 		// Go through the tiles on each layer and pick relevant data from tiles who's boundaries the actor is within
 		// This relies on layers being scanned in bottom to top order, topmost entries must be allowed to override lower ones
-		for(let layers in this.map_layers) {
-			for(let tiles in this.map_layers[layers]) {
-				const tile = this.map_layers[layers][tiles];
+		for(let layers in this.map.tileset.layers) {
+			for(let tile of this.map.tileset.layers[layers]) {
 				const touching_x = intersects(box_x, tile);
 				const touching_y = intersects(box_y, tile);
 				if(!touching_x && !touching_y)
@@ -338,9 +326,9 @@ class Actor {
 						solid_y = true;
 				} else {
 					if(touching_x)
-						solid_x = layers != height && !layer_path;
+						solid_x = layers != this.data.layer && !layer_path;
 					if(touching_y)
-						solid_y = layers != height && !layer_path;
+						solid_y = layers != this.data.layer && !layer_path;
 				}
 			}
 		}

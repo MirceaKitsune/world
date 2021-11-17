@@ -1,11 +1,12 @@
 class Tileset {
 	constructor(map, settings) {
 		// Tilesets are spawned by the Map class and have an instance as their parent
-		// We work with the layers object from the parent Map, changes made to it are reflected universally
 		this.map = map;
-		this.map_layers = this.map.layers;
 		this.settings = settings;
-		this.element_layers = [];
+
+		// Objects that store layer data and the HTML elements of layers
+		this.layers = [];
+		this.layers_element = [];
 
 		// Set the scale of the tilemap so that it covers the range indicated by the parent
 		// The noise offset is the position of the map on the world grid
@@ -69,9 +70,9 @@ class Tileset {
 				y * this.settings.size + this.settings.size,
 				flags
 			];
-			if(!this.map_layers[layer])
-				this.map_layers[layer] = [];
-			this.map_layers[layer].push(data);
+			if(!this.layers[layer])
+				this.layers[layer] = [];
+			this.layers[layer].push(data);
 		}
 
 		// Tile: 0 = left, 1 = top
@@ -82,31 +83,31 @@ class Tileset {
 	// Draws a tile on the canvas of its layer
 	tile_draw(layer, x, y, tile) {
 		// If this layer hasn't been set by a previous call, set it up now
-		if(!this.element_layers[layer]) {
-			this.element_layers[layer] = {};
-			this.element_layers[layer].tiles = [];
+		if(!this.layers_element[layer]) {
+			this.layers_element[layer] = {};
+			this.layers_element[layer].tiles = [];
 
-			this.element_layers[layer].element = html_create("div");
-			html_set(this.element_layers[layer].element, "class", "tileset");
-			html_css(this.element_layers[layer].element, "zIndex", layer);
-			html_parent(this.element_layers[layer].element, this.element, true);
+			this.layers_element[layer].element = html_create("div");
+			html_set(this.layers_element[layer].element, "class", "tileset");
+			html_css(this.layers_element[layer].element, "zIndex", layer);
+			html_parent(this.layers_element[layer].element, this.element, true);
 
-			this.element_layers[layer].element_canvas = html_create("canvas");
-			html_set(this.element_layers[layer].element_canvas, "width", this.scale.x * this.settings.size);
-			html_set(this.element_layers[layer].element_canvas, "height", this.scale.y * this.settings.size);
-			html_parent(this.element_layers[layer].element_canvas, this.element_layers[layer].element, true);
+			this.layers_element[layer].element_canvas = html_create("canvas");
+			html_set(this.layers_element[layer].element_canvas, "width", this.scale.x * this.settings.size);
+			html_set(this.layers_element[layer].element_canvas, "height", this.scale.y * this.settings.size);
+			html_parent(this.layers_element[layer].element_canvas, this.layers_element[layer].element, true);
 
 			// If this tileset uses fog, apply the fog color as the background color of this layer's element
 			// If the fog setting is an array use the value for this height, if not it's a constant color
 			if(this.settings.fog) {
 				const fog = typeof this.settings.fog === "object" ? this.settings.fog[layer] : this.settings.fog;
-				html_css(this.element_layers[layer].element, "backgroundColor", fog);
+				html_css(this.layers_element[layer].element, "backgroundColor", fog);
 			}
 		}
 
 		// Draw this tile on the canvas element at the indicated position, the last call is drawn on top
 		const pos = vector(tile);
-		const ctx = this.element_layers[layer].element_canvas.getContext("2d");
+		const ctx = this.layers_element[layer].element_canvas.getContext("2d");
 		ctx.drawImage(this.image, pos.x * this.settings.size, pos.y * this.settings.size, this.settings.size, this.settings.size, x * this.settings.size, y * this.settings.size, this.settings.size, this.settings.size);
 	}
 }

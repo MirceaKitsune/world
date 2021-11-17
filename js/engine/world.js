@@ -45,8 +45,7 @@ class World {
 		for(let x = 0; x < data.maps_x; x++) {
 			for(let y = 0; y < data.maps_y; y++) {
 				const temp = Math.sin((x + WORLD_SEED) * (y + WORLD_SEED));
-				for(let maps in this.data_maps) {
-					const map = this.data_maps[maps];
+				for(let map of Object.values(this.data_maps)) {
 					if(temp >= map.temp_min && temp <= map.temp_max) {
 						const scale = vector([data.scale_x, data.scale_y]);
 						const grid = vector([x, y, data.height]);
@@ -74,8 +73,7 @@ class World {
 
 	// Returns the map located at the given grid position
 	map_at_grid(grid) {
-		for(let maps in this.maps) {
-			const map = this.maps[maps];
+		for(let map of this.maps) {
 			const map_grid = map.grid;
 			if(grid.x == map_grid.x && grid.y == map_grid.y && grid.z == map_grid.z)
 				return map;

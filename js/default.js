@@ -148,7 +148,7 @@ const tileset_outdoor_terrain_1 = {
 			roads: 0.25,
 			flags: flags_brush_dirt,
 			tiles_floor: tileset_floor(0, 18),
-			tiles_wall: null
+			tiles_wall: undefined
 		}
 	]
 };
@@ -184,7 +184,7 @@ const tileset_outdoor_terrain_2 = {
 			roads: 0.25,
 			flags: flags_brush_dirt,
 			tiles_floor: tileset_floor(3, 18),
-			tiles_wall: null
+			tiles_wall: undefined
 		}
 	]
 };
@@ -195,9 +195,7 @@ const map_outdoor_1 = {
 	perspective: 0.1,
 	bound: true,
 	overlays: overlays_outdoor,
-	tilesets: {
-		terrains: [tileset_outdoor_terrain_1]
-	}
+	tileset: tileset_outdoor_terrain_1
 };
 
 const map_outdoor_2 = {
@@ -206,9 +204,7 @@ const map_outdoor_2 = {
 	perspective: 0.1,
 	bound: true,
 	overlays: overlays_outdoor,
-	tilesets: {
-		terrains: [tileset_outdoor_terrain_2]
-	}
+	tileset: tileset_outdoor_terrain_2
 };
 
 const map_group_outdoor = {

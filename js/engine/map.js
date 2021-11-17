@@ -8,17 +8,13 @@ class Map {
 		this.settings = settings;
 		this.scale = scale;
 		this.grid = grid;
-		this.layers = [];
-		this.active = false;
 
 		// Create the map element
 		this.element = html_create("div");
 		html_set(this.element, "class", "map");
 
 		// Add overlays to the map element
-		for(let overlays in this.settings.overlays) {
-			const overlay = this.settings.overlays[overlays];
-
+		for(let overlay of this.settings.overlays) {
 			// Create the overlay element and apply its settings
 			const element_overlay = html_create("div");
 			html_set(element_overlay, "class", "map_overlay");
@@ -71,10 +67,9 @@ class Map {
 		html_css(this.element_view, "height", px([this.scale.y]));
 		html_parent(this.element_view, this.element, true);
 
-		// Create terrain tilesets
-		this.tilesets_terrain = [];
-		for(let terrain in settings.tilesets.terrains)
-			this.tilesets_terrain[terrain] = new TilesetTerrain(this, settings.tilesets.terrains[terrain]);
+		// Create the tileset for this map, starts inactive by default
+		this.tileset = new TilesetTerrain(this, settings.tileset);
+		this.active = false;
 	}
 
 	// Activate this map
