@@ -19,9 +19,6 @@ class Tileset {
 			y: this.map.grid.y * this.map.scale.y
 		};
 
-		// To avoid incorrect draw order sort brushes based on their layer
-		this.settings.brushes.sort(function(a, b) { return a.layer - b.layer });
-
 		// The image file used by this tileset, prepares the image and runs the main function once it loads
 		this.image = new Image();
 		this.image.src = this.settings.image;
@@ -60,7 +57,7 @@ class Tileset {
 	}
 
 	// Sets the data of a tile for this layer
-	tile_set(layer, x, y, tile, flags) {
+	tile_set(x, y, layer, tile, flags) {
 		// Data: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
 		if(flags) {
 			const data = [
@@ -77,11 +74,11 @@ class Tileset {
 
 		// Tile: 0 = left, 1 = top
 		if(tile)
-			this.tile_draw(layer, x, y, tile);
+			this.tile_draw(x, y, layer, tile);
 	}
 
 	// Draws a tile on the canvas of its layer
-	tile_draw(layer, x, y, tile) {
+	tile_draw(x, y, layer, tile) {
 		// If this layer hasn't been set by a previous call, set it up now
 		if(!this.layers_element[layer]) {
 			this.layers_element[layer] = {};
