@@ -310,12 +310,13 @@ class Actor {
 				if(!touching_x && !touching_y)
 					continue;
 
-				// Remember the last layer we touched and inherit its flags
-				// If the actor is standing on a path tile all floors become valid
+				// Remember the last target layer we touched and inherit its flags
+				// If the actor is standing on a path tile all floors become valid targets
 				flags = tile[4];
-				layer = layers;
 				if(this.flag("path", flags) > 0)
 					layer_path = true;
+				else
+					layer = layers;
 
 				// We're colliding if this is either a solid tile, or a non-solid one from another layer unless we have a path
 				// The topmost surface is counted so a later iteration may override this decision

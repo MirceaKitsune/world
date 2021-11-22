@@ -57,24 +57,22 @@ class Tileset {
 	}
 
 	// Sets the data of a tile for this layer
-	tile_set(x, y, layer, tile, flags) {
-		// Data: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
-		if(flags) {
-			const data = [
-				x * this.settings.size,
-				y * this.settings.size,
-				x * this.settings.size + this.settings.size,
-				y * this.settings.size + this.settings.size,
-				flags
-			];
-			if(!this.layers[layer])
-				this.layers[layer] = [];
-			this.layers[layer].push(data);
-		}
+	tile_set(x, y, layer, tiles) {
+		for(let tile of tiles) {
+			// Skip if this tile has a noise function that doesn't pass the check
+			if(tile.noise && !tile.noise(x, y, layer))
+				continue;
 
-		// Tile: 0 = left, 1 = top
-		if(tile)
+			// Draw the tile and add its flags to the layer if any are provided
+			// Data: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
 			this.tile_draw(x, y, layer, tile);
+			if(tile.flags) {
+				const data = [x * this.settings.size, y * this.settings.size, x * this.settings.size + this.settings.size, y * this.settings.size + this.settings.size, tile.flags];
+				if(!this.layers[layer])
+					this.layers[layer] = [];
+				this.layers[layer].push(data);
+			}
+		}
 	}
 
 	// Draws a tile on the canvas of its layer
@@ -103,8 +101,7 @@ class Tileset {
 		}
 
 		// Draw this tile on the canvas element at the indicated position, the last call is drawn on top
-		const pos = vector(tile);
 		const ctx = this.layers_element[layer].element_canvas.getContext("2d");
-		ctx.drawImage(this.image, pos.x * this.settings.size, pos.y * this.settings.size, this.settings.size, this.settings.size, x * this.settings.size, y * this.settings.size, this.settings.size, this.settings.size);
+		ctx.drawImage(this.image, tile.x * this.settings.size, tile.y * this.settings.size, this.settings.size, this.settings.size, x * this.settings.size, y * this.settings.size, this.settings.size, this.settings.size);
 	}
 }
