@@ -78,170 +78,120 @@ const noise_tile_cave_false = function(x, y, layer) {
 	return noise_pattern_terrain(x, 0) > 0.05;
 }
 
-// Returns the corresponding floor tile set from this top left corner
-function tileset_floor_terrain(x, y, type) {
-	const flags_floor = [type, "floor"];
-	const flags_path = [type, "path"];
-	return {
-		center: [
-			{x: x + 1, y: y + 4, flags: flags_floor, noise: noise_tile_floor_25},
-			{x: x + 0, y: y + 0, flags: flags_floor, noise: noise_tile_floor_50},
-			{x: x + 1, y: y + 0, flags: flags_floor, noise: noise_tile_floor_75},
-			{x: x + 2, y: y + 0, flags: flags_floor, noise: noise_tile_floor_100}
-		],
-		edge_top: [
-			{x: x + 0, y: y + 1, flags: flags_path, noise: noise_tile_path_1},
-			{x: x + 0, y: y + 2, flags: flags_path, noise: noise_tile_path_2},
-			{x: x + 1, y: y + 3}
-		],
-		edge_bottom: [
-			{x: x + 1, y: y + 5}
-		],
-		edge_left: [
-			{x: x + 0, y: y + 1, flags: flags_path, noise: noise_tile_path_1},
-			{x: x + 0, y: y + 2, flags: flags_path, noise: noise_tile_path_2},
-			{x: x + 0, y: y + 4}
-		],
-		edge_right: [
-			{x: x + 0, y: y + 1, flags: flags_path, noise: noise_tile_path_1},
-			{x: x + 0, y: y + 2, flags: flags_path, noise: noise_tile_path_2},
-			{x: x + 2, y: y + 4}
-		],
-		corner_in_top_left: [{x: x + 1, y: y + 1}],
-		corner_in_top_right: [{x: x + 2, y: y + 1}],
-		corner_in_bottom_left: [{x: x + 1, y: y + 2}],
-		corner_in_bottom_right: [{x: x + 2, y: y + 2}],
-		corner_out_top_left: [{x: x + 0, y: y + 3}],
-		corner_out_top_right: [{x: x + 2, y: y + 3}],
-		corner_out_bottom_left: [{x: x + 0, y: y + 5}],
-		corner_out_bottom_right: [{x: x + 2, y: y + 5}]
-	};
-}
+// Returns the corresponding tile set from this top left corner
+function tileset_terrain(pos_floor, pos_wall, flags, height) {
+	var tiles = {};
 
-// Returns the corresponding road floor tile set from this top left corner
-function tileset_floor_road(x, y, type) {
-	const flags_floor = [type, "floor", "road"];
-	const flags_gravel = [type, "gravel"];
-	return {
-		center: [
-			{x: x + 1, y: y + 4, flags: flags_floor, noise: noise_tile_floor_25},
-			{x: x + 0, y: y + 0, flags: flags_floor, noise: noise_tile_floor_50},
-			{x: x + 1, y: y + 0, flags: flags_floor, noise: noise_tile_floor_75},
-			{x: x + 2, y: y + 0, flags: flags_floor, noise: noise_tile_floor_100}
-		],
-		edge_top: [
-			{x: x + 1, y: y + 3},
-			{x: x + 0, y: y + 1, flags: flags_gravel, noise: noise_tile_path_1},
-			{x: x + 0, y: y + 2, flags: flags_gravel, noise: noise_tile_path_2}
-		],
-		edge_bottom: [
-			{x: x + 1, y: y + 5},
-			{x: x + 0, y: y + 1, flags: flags_gravel, noise: noise_tile_path_1},
-			{x: x + 0, y: y + 2, flags: flags_gravel, noise: noise_tile_path_2}
-		],
-		edge_left: [
-			{x: x + 0, y: y + 4},
-			{x: x + 0, y: y + 1, flags: flags_gravel, noise: noise_tile_path_1},
-			{x: x + 0, y: y + 2, flags: flags_gravel, noise: noise_tile_path_2}
-		],
-		edge_right: [
-			{x: x + 2, y: y + 4},
-			{x: x + 0, y: y + 1, flags: flags_gravel, noise: noise_tile_path_1},
-			{x: x + 0, y: y + 2, flags: flags_gravel, noise: noise_tile_path_2}
-		],
-		corner_in_top_left: [{x: x + 1, y: y + 1}],
-		corner_in_top_right: [{x: x + 2, y: y + 1}],
-		corner_in_bottom_left: [{x: x + 1, y: y + 2}],
-		corner_in_bottom_right: [{x: x + 2, y: y + 2}],
-		corner_out_top_left: [{x: x + 0, y: y + 3}],
-		corner_out_top_right: [{x: x + 2, y: y + 3}],
-		corner_out_bottom_left: [{x: x + 0, y: y + 5}],
-		corner_out_bottom_right: [{x: x + 2, y: y + 5}]
-	};
-}
+	// Set the floor tiles
+	const floor_x = pos_floor[0];
+	const floor_y = pos_floor[1];
+	const flags_floor = flags.concat(flags, ["floor"]);
+	const flags_path = flags.concat(flags, ["path"]);
+	tiles.floor_center = [
+		{x: floor_x + 1, y: floor_y + 4, flags: flags_floor, noise: noise_tile_floor_25},
+		{x: floor_x + 0, y: floor_y + 0, flags: flags_floor, noise: noise_tile_floor_50},
+		{x: floor_x + 1, y: floor_y + 0, flags: flags_floor, noise: noise_tile_floor_75},
+		{x: floor_x + 2, y: floor_y + 0, flags: flags_floor, noise: noise_tile_floor_100}
+	];
+	tiles.floor_edge_top = [
+		{x: floor_x + 0, y: floor_y + 1, flags: flags_path, noise: noise_tile_path_1},
+		{x: floor_x + 0, y: floor_y + 2, flags: flags_path, noise: noise_tile_path_2},
+		{x: floor_x + 1, y: floor_y + 3}
+	];
+	tiles.floor_edge_bottom = [
+		// {x: floor_x + 0, y: floor_y + 1, flags: flags_path, noise: noise_tile_path_1},
+		// {x: floor_x + 0, y: floor_y + 2, flags: flags_path, noise: noise_tile_path_2},
+		{x: floor_x + 1, y: floor_y + 5}
+	];
+	tiles.floor_edge_left = [
+		{x: floor_x + 0, y: floor_y + 1, flags: flags_path, noise: noise_tile_path_1},
+		{x: floor_x + 0, y: floor_y + 2, flags: flags_path, noise: noise_tile_path_2},
+		{x: floor_x + 0, y: floor_y + 4}
+	];
+	tiles.floor_edge_right = [
+		{x: floor_x + 0, y: floor_y + 1, flags: flags_path, noise: noise_tile_path_1},
+		{x: floor_x + 0, y: floor_y + 2, flags: flags_path, noise: noise_tile_path_2},
+		{x: floor_x + 2, y: floor_y + 4}
+	];
+	tiles.floor_corner_in_top_left = [{x: floor_x + 1, y: floor_y + 1}];
+	tiles.floor_corner_in_top_right = [{x: floor_x + 2, y: floor_y + 1}];
+	tiles.floor_corner_in_bottom_left = [{x: floor_x + 1, y: floor_y + 2}];
+	tiles.floor_corner_in_bottom_right = [{x: floor_x + 2, y: floor_y + 2}];
+	tiles.floor_corner_out_top_left = [{x: floor_x + 0, y: floor_y + 3}];
+	tiles.floor_corner_out_top_right = [{x: floor_x + 2, y: floor_y + 3}];
+	tiles.floor_corner_out_bottom_left = [{x: floor_x + 0, y: floor_y + 5}];
+	tiles.floor_corner_out_bottom_right = [{x: floor_x + 2, y: floor_y + 5}];
 
-// Returns the corresponding wall tile set from this top left corner, 1 tile high walls
-function tileset_wall_1(x, y, type) {
-	const flags_wall = [type, "wall"];
-	return {
-		left: [
-			[{x: x + 0, y: y + 0}]
-		],
-		middle: [
-			[{x: x + 1, y: y + 0, flags:flags_wall}]
-		],
-		right: [
-			[{x: x + 2, y: y + 0}]
+	// Set the wall tiles
+	const wall_x = pos_wall[0];
+	const wall_y = pos_wall[1];
+	const flags_wall = flags.concat(flags, ["wall"]);
+	const flags_cave = flags.concat(flags, ["cave"]);
+	if(height >= 4) {
+		// Configuration for a 4 tile tall wall
+		tiles.wall_left = [
+			[{x: wall_x + 0, y: wall_y + 1}],
+			[{x: wall_x + 0, y: wall_y + 2}],
+			[{x: wall_x + 0, y: wall_y + 2}],
+			[{x: wall_x + 0, y: wall_y + 3}]
+		];
+		tiles.wall_middle = [
+			[{x: wall_x + 1, y: wall_y + 1, flags:flags_wall}],
+			[{x: wall_x + 1, y: wall_y + 2, flags:flags_wall}],
+			[{x: wall_x + 1, y: wall_y + 2, flags:flags_wall, noise: noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 4, flags:flags_wall, noise: noise_tile_cave_true}],
+			[{x: wall_x + 1, y: wall_y + 3, flags:flags_wall, noise: noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 5, flags:flags_cave, noise: noise_tile_cave_true}],
+		];
+		tiles.wall_right = [
+			[{x: wall_x + 2, y: wall_y + 1}],
+			[{x: wall_x + 2, y: wall_y + 2}],
+			[{x: wall_x + 2, y: wall_y + 2}],
+			[{x: wall_x + 2, y: wall_y + 3}]
+		];
+	} else if(height >= 3) {
+		// Configuration for a 3 tile tall wall
+		tiles.wall_left = [
+			[{x: wall_x + 0, y: wall_y + 1}],
+			[{x: wall_x + 0, y: wall_y + 2}],
+			[{x: wall_x + 0, y: wall_y + 3}]
+		];
+		tiles.wall_middle = [
+			[{x: wall_x + 1, y: wall_y + 1, flags:flags_wall}],
+			[{x: wall_x + 1, y: wall_y + 2, flags:flags_wall, noise: noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 4, flags:flags_wall, noise: noise_tile_cave_true}],
+			[{x: wall_x + 1, y: wall_y + 3, flags:flags_wall, noise: noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 5, flags:flags_cave, noise: noise_tile_cave_true}],
+		];
+		tiles.wall_right = [
+			[{x: wall_x + 2, y: wall_y + 1}],
+			[{x: wall_x + 2, y: wall_y + 2}],
+			[{x: wall_x + 2, y: wall_y + 3}]
+		];
+	} else if(height >= 2) {
+		// Configuration for a 2 tile tall wall
+		tiles.wall_left = [
+			[{x: wall_x + 0, y: wall_y + 1}],
+			[{x: wall_x + 0, y: wall_y + 3}]
+		];
+		tiles.wall_middle = [
+			[{x: wall_x + 1, y: wall_y + 1, flags:flags_wall}],
+			[{x: wall_x + 1, y: wall_y + 3, flags:flags_wall}]
+		];
+		tiles.wall_right = [
+			[{x: wall_x + 2, y: wall_y + 1}],
+			[{x: wall_x + 2, y: wall_y + 3}]
+		];
+	} else if(height >= 1) {
+		// Configuration for a 1 tile tall wall
+		tiles.wall_left = [
+			[{x: wall_x + 0, y: wall_y + 0}]
+		];
+		tiles.wall_middle = [
+			[{x: wall_x + 1, y: wall_y + 0, flags:flags_wall}]
+		];
+		tiles.wall_right = [
+			[{x: wall_x + 2, y: wall_y + 0}]
 		]
-	};
-}
+	}
 
-// Returns the corresponding wall tile set from this top left corner, 2 tile high walls
-function tileset_wall_2(x, y, type) {
-	const flags_wall = [type, "wall"];
-	return {
-		left: [
-			[{x: x + 0, y: y + 1}],
-			[{x: x + 0, y: y + 3}]
-		],
-		middle: [
-			[{x: x + 1, y: y + 1, flags:flags_wall}],
-			[{x: x + 1, y: y + 3, flags:flags_wall}]
-		],
-		right: [
-			[{x: x + 2, y: y + 1}],
-			[{x: x + 2, y: y + 3}]
-		]
-	};
-}
-
-// Returns the corresponding wall tile set from this top left corner, 3 tile high walls
-function tileset_wall_3(x, y, type) {
-	const flags_wall = [type, "wall"];
-	const flags_cave = [type, "cave"];
-	return {
-		left: [
-			[{x: x + 0, y: y + 1}],
-			[{x: x + 0, y: y + 2}],
-			[{x: x + 0, y: y + 3}]
-		],
-		middle: [
-			[{x: x + 1, y: y + 1, flags:flags_wall}],
-			[{x: x + 1, y: y + 2, flags:flags_wall, noise: noise_tile_cave_false}, {x: x + 0, y: y + 4, flags:flags_wall, noise: noise_tile_cave_true}],
-			[{x: x + 1, y: y + 3, flags:flags_wall, noise: noise_tile_cave_false}, {x: x + 0, y: y + 5, flags:flags_cave, noise: noise_tile_cave_true}],
-		],
-		right: [
-			[{x: x + 2, y: y + 1}],
-			[{x: x + 2, y: y + 2}],
-			[{x: x + 2, y: y + 3}]
-		]
-	};
-}
-
-// Returns the corresponding wall tile set from this top left corner, 4 tile high walls
-function tileset_wall_4(x, y, type) {
-	const flags_wall = [type, "wall"];
-	const flags_cave = [type, "cave"];
-	return {
-		left: [
-			[{x: x + 0, y: y + 1}],
-			[{x: x + 0, y: y + 2}],
-			[{x: x + 0, y: y + 2}],
-			[{x: x + 0, y: y + 3}]
-		],
-		middle: [
-			[{x: x + 1, y: y + 1, flags:flags_wall}],
-			[{x: x + 1, y: y + 2, flags:flags_wall}],
-			[{x: x + 1, y: y + 2, flags:flags_wall, noise: noise_tile_cave_false}, {x: x + 0, y: y + 4, flags:flags_wall, noise: noise_tile_cave_true}],
-			[{x: x + 1, y: y + 3, flags:flags_wall, noise: noise_tile_cave_false}, {x: x + 0, y: y + 5, flags:flags_cave, noise: noise_tile_cave_true}],
-		],
-		right: [
-			[{x: x + 2, y: y + 1}],
-			[{x: x + 2, y: y + 2}],
-			[{x: x + 2, y: y + 2}],
-			[{x: x + 2, y: y + 3}]
-		]
-	};
+	return tiles;
 }
 
 // Overlays for outdoor map
@@ -276,7 +226,6 @@ const flags_actor_character = {
 	friction: {
 		path: 1,
 		cave: 0.5,
-		gravel: 0.875,
 		grass: 0.625,
 		dirt: 0.5,
 		stone: 0.5
@@ -291,21 +240,17 @@ const tileset_outdoor_terrain_1 = {
 		// Terrain, base
 		{
 			noise: noise_brush_terrain,
-			tiles_floor: tileset_floor_terrain(3, 0, "grass"),
-			tiles_wall: tileset_wall_1(0, 24, "stone")
+			tiles: tileset_terrain([3, 0], [0, 24], ["grass", "terrain"], 1)
 		},
 		// Road
 		{
 			noise: noise_brush_road,
-			roads: 0.25,
-			tiles_floor: tileset_floor_road(0, 18, "dirt"),
-			tiles_wall: undefined
+			tiles: tileset_terrain([0, 18], [0, 24], ["dirt", "road"], 0)
 		},
 		// Terrain, 1st island
 		{
 			noise: noise_brush_terrain,
-			tiles_floor: tileset_floor_terrain(0, 0, "grass"),
-			tiles_wall: tileset_wall_3(0, 24, "stone")
+			tiles: tileset_terrain([0, 0], [0, 24], ["grass", "terrain"], 3)
 		}
 	]
 };
@@ -318,21 +263,17 @@ const tileset_outdoor_terrain_2 = {
 		// Terrain, base
 		{
 			noise: noise_brush_terrain,
-			tiles_floor: tileset_floor_terrain(6, 0, "grass"),
-			tiles_wall: tileset_wall_1(3, 24, "stone")
+			tiles: tileset_terrain([6, 0], [3, 24], ["grass", "terrain"], 1)
 		},
 		// Road
 		{
 			noise: noise_brush_road,
-			roads: 0.25,
-			tiles_floor: tileset_floor_road(3, 18, "dirt"),
-			tiles_wall: undefined
+			tiles: tileset_terrain([3, 18], [3, 24], ["dirt", "road"], 0)
 		},
 		// Terrain, 1st island
 		{
 			noise: noise_brush_terrain,
-			tiles_floor: tileset_floor_terrain(6, 0, "grass"),
-			tiles_wall: tileset_wall_3(3, 24, "stone")
+			tiles: tileset_terrain([6, 0], [3, 24], ["grass", "terrain"], 3)
 		}
 	]
 };

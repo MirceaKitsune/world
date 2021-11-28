@@ -1,20 +1,20 @@
 // Terrain tile positions as named in the brush definition
-const TILE_FLOOR_CENTER = "center";
-const TILE_FLOOR_EDGE_TOP = "edge_top";
-const TILE_FLOOR_EDGE_BOTTOM = "edge_bottom";
-const TILE_FLOOR_EDGE_LEFT = "edge_left";
-const TILE_FLOOR_EDGE_RIGHT = "edge_right";
-const TILE_FLOOR_CORNER_IN_TOP_LEFT = "corner_in_top_left";
-const TILE_FLOOR_CORNER_IN_TOP_RIGHT = "corner_in_top_right";
-const TILE_FLOOR_CORNER_IN_BOTTOM_LEFT = "corner_in_bottom_left";
-const TILE_FLOOR_CORNER_IN_BOTTOM_RIGHT = "corner_in_bottom_right";
-const TILE_FLOOR_CORNER_OUT_TOP_LEFT = "corner_out_top_left";
-const TILE_FLOOR_CORNER_OUT_TOP_RIGHT = "corner_out_top_right";
-const TILE_FLOOR_CORNER_OUT_BOTTOM_LEFT = "corner_out_bottom_left";
-const TILE_FLOOR_CORNER_OUT_BOTTOM_RIGHT = "corner_out_bottom_right";
-const TILE_WALL_LEFT = "left";
-const TILE_WALL_MIDDLE = "middle";
-const TILE_WALL_RIGHT = "right";
+const TILE_FLOOR_CENTER = "floor_center";
+const TILE_FLOOR_EDGE_TOP = "floor_edge_top";
+const TILE_FLOOR_EDGE_BOTTOM = "floor_edge_bottom";
+const TILE_FLOOR_EDGE_LEFT = "floor_edge_left";
+const TILE_FLOOR_EDGE_RIGHT = "floor_edge_right";
+const TILE_FLOOR_CORNER_IN_TOP_LEFT = "floor_corner_in_top_left";
+const TILE_FLOOR_CORNER_IN_TOP_RIGHT = "floor_corner_in_top_right";
+const TILE_FLOOR_CORNER_IN_BOTTOM_LEFT = "floor_corner_in_bottom_left";
+const TILE_FLOOR_CORNER_IN_BOTTOM_RIGHT = "floor_corner_in_bottom_right";
+const TILE_FLOOR_CORNER_OUT_TOP_LEFT = "floor_corner_out_top_left";
+const TILE_FLOOR_CORNER_OUT_TOP_RIGHT = "floor_corner_out_top_right";
+const TILE_FLOOR_CORNER_OUT_BOTTOM_LEFT = "floor_corner_out_bottom_left";
+const TILE_FLOOR_CORNER_OUT_BOTTOM_RIGHT = "floor_corner_out_bottom_right";
+const TILE_WALL_LEFT = "wall_left";
+const TILE_WALL_MIDDLE = "wall_middle";
+const TILE_WALL_RIGHT = "wall_right";
 
 class TilesetTerrain extends Tileset {
 	// Returns true if this is a fully surrounded tile based on the appropriate noise levels
@@ -50,7 +50,7 @@ class TilesetTerrain extends Tileset {
 				// Handle drawing of terrain tiles
 				if(this.noise(x, y, layer_floor, brush)) {
 					// Draw floor center
-					this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CENTER]);
+					this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CENTER]);
 				} else {
 					const neighbors = this.neighbors(x, y);
 					const has = [
@@ -65,47 +65,47 @@ class TilesetTerrain extends Tileset {
 					];
 					if(has[0] || has[1] || has[2] || has[3] || has[4] || has[5] || has[6] || has[7]) {
 						// Draw walls
-						if(brush.tiles_wall) {
+						if(brush.tiles[TILE_WALL_LEFT] && brush.tiles[TILE_WALL_MIDDLE] && brush.tiles[TILE_WALL_RIGHT]) {
 							if(!has[1] && has[2] && !has[3])
 								for(let i = layer; i > layer - height; i--)
-									this.tile_set(draw_x, draw_y + (layer - i), layer, brush.tiles_wall[TILE_WALL_LEFT][layer - i]);
+									this.tile_set(draw_x, draw_y + (layer - i), layer, brush.tiles[TILE_WALL_LEFT][layer - i]);
 							if(has[1])
 								for(let i = layer; i > layer - height; i--)
-									this.tile_set(draw_x, draw_y + (layer - i), layer, brush.tiles_wall[TILE_WALL_MIDDLE][layer - i]);
+									this.tile_set(draw_x, draw_y + (layer - i), layer, brush.tiles[TILE_WALL_MIDDLE][layer - i]);
 							if(!has[1] && has[0] && !has[7])
 								for(let i = layer; i > layer - height; i--)
-									this.tile_set(draw_x, draw_y + (layer - i), layer, brush.tiles_wall[TILE_WALL_RIGHT][layer - i]);
+									this.tile_set(draw_x, draw_y + (layer - i), layer, brush.tiles[TILE_WALL_RIGHT][layer - i]);
 						}
 
 						// Draw floor edges
 						if(has[5] && !has[3] && !has[7])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_EDGE_TOP]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_EDGE_TOP]);
 						if(has[7] && !has[1] && !has[5])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_EDGE_RIGHT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_EDGE_RIGHT]);
 						if(has[1] && !has[3] && !has[7])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_EDGE_BOTTOM]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_EDGE_BOTTOM]);
 						if(has[3] && !has[1] && !has[5])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_EDGE_LEFT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_EDGE_LEFT]);
 
 						// Draw floor inner corners
 						if(has[5] && has[7] && !has[1] && !has[3])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CORNER_IN_BOTTOM_LEFT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CORNER_IN_BOTTOM_LEFT]);
 						if(has[3] && has[5] && !has[1] && !has[7])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CORNER_IN_BOTTOM_RIGHT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CORNER_IN_BOTTOM_RIGHT]);
 						if(has[1] && has[7] && !has[3] && !has[5])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CORNER_IN_TOP_LEFT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CORNER_IN_TOP_LEFT]);
 						if(has[1] && has[3] && !has[5] && !has[7])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CORNER_IN_TOP_RIGHT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CORNER_IN_TOP_RIGHT]);
 
 						// Draw floor outer corners
 						if(has[0] && !has[1] && !has[7])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CORNER_OUT_BOTTOM_RIGHT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CORNER_OUT_BOTTOM_RIGHT]);
 						if(has[2] && !has[1] && !has[3])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CORNER_OUT_BOTTOM_LEFT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CORNER_OUT_BOTTOM_LEFT]);
 						if(has[4] && !has[3] && !has[5])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CORNER_OUT_TOP_LEFT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CORNER_OUT_TOP_LEFT]);
 						if(has[6] && !has[5] && !has[7])
-							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles_floor[TILE_FLOOR_CORNER_OUT_TOP_RIGHT]);
+							this.tile_set(draw_x, draw_y, layer_floor, brush.tiles[TILE_FLOOR_CORNER_OUT_TOP_RIGHT]);
 					}
 				}
 			}
@@ -119,7 +119,7 @@ class TilesetTerrain extends Tileset {
 		// The layer the floor is drawn on is offset by the length of its wall
 		var layer = 0;
 		for(let brush of this.settings.brushes) {
-			const height = brush.tiles_wall ? brush.tiles_wall[TILE_WALL_MIDDLE].length : 0;
+			const height = brush.tiles[TILE_WALL_LEFT] && brush.tiles[TILE_WALL_MIDDLE] && brush.tiles[TILE_WALL_RIGHT] ? brush.tiles[TILE_WALL_MIDDLE].length : 0;
 			this.paint(layer, height, brush);
 			if(layer + height > layer)
 				layer = layer + height;
