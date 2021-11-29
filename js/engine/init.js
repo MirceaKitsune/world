@@ -55,17 +55,34 @@ function include_js(urls) {
 	}
 }
 
-// Returns a random number in a given range
+// Helper: Returns the value of location.search from the URL
+function get_search(name) {
+	var search = location.search.substring(1).split("=");
+	if(name === search[0] && search[1] !== "")
+		return search[1];
+	return null;
+}
+
+// Helper: Returns a random entry if this is an array or the same value if not
+function get_random(object) {
+	if(typeof object === "object") {
+		var index = Math.floor(Math.random() * object.length);
+		return object[index];
+	}
+	return object;
+}
+
+// Helper: Returns a random number in a given range
 function random_range(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-// Returns a vector from an array
+// Helper: Returns a vector from an array
 function vector(array) {
 	return {x: array[0], y: array[1], z: array[2]};
 }
 
-// Converts a velocity to an angle
+// Helper: Converts a velocity to an angle
 function vec2ang(vec) {
 	// Use the fastest direction when speeds differ, first if they are equal, no change if both are zero
 	// Angle, clockwise direction: 0 = top, 1 = right, 2 = bottom, 3 = left
@@ -80,12 +97,7 @@ function vec2ang(vec) {
 	return undefined;
 }
 
-// Returns true if a bounding box intersects another
-function intersects(box1, box2) {
-	return box1[2] >= box2[0] && box1[3] >= box2[1] && box1[0] <= box2[2] && box1[1] <= box2[3];
-}
-
-// Returns a pixel string for HTML formatting
+// Helper: Returns a pixel string for HTML formatting
 function px(pixels) {
 	var s = ""
 	for(var pixel of pixels)
@@ -93,24 +105,13 @@ function px(pixels) {
 	return s;
 }
 
-// Returns the value of location.search from the URL
-function get_search(name) {
-	var search = location.search.substring(1).split("=");
-	if(name === search[0] && search[1] !== "")
-		return search[1];
-	return null;
-}
-
-// Returns a random entry if this is an array or the same value if not
-function get_random(object) {
-	if(typeof object === "object") {
-		var index = Math.floor(Math.random() * object.length);
-		return object[index];
-	}
-	return object;
+// Helper: Returns true if a bounding box intersects another
+function intersects(box1, box2) {
+	return box1[2] >= box2[0] && box1[3] >= box2[1] && box1[0] <= box2[2] && box1[1] <= box2[3];
 }
 
 // Include engine code and style files
-// The last script is the game we want to run, extracted from the "init" tag defined in the HTML
+// The last script is the mod we want to run, extracted from the "mod" tag defined in the HTML
+const mod = "mods/" + document.getElementById("mod").getAttribute("name") + "/init.js";
 include_css(FILES_CSS);
-include_js(FILES_JS.concat([document.getElementById("init").getAttribute("script")]));
+include_js(FILES_JS.concat([mod]));
