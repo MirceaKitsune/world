@@ -21,7 +21,7 @@ class Tileset {
 
 		// The image file used by this tileset, prepares the image and runs the main function once it loads
 		this.image = new Image();
-		this.image.src = this.settings.image;
+		this.image.src = PATH_IMAGES + this.settings.image;
 		this.image.onload = this.onload.bind(this);
 
 		// Create the tileset element and append it to the parent element

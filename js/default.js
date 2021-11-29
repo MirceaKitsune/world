@@ -197,7 +197,7 @@ function tileset_terrain(pos_floor, pos_wall, flags, height) {
 // Overlays for outdoor map
 const overlays_outdoor = [
 	{
-		image: "img/backgrounds/clouds.png",
+		image: "backgrounds/clouds.png",
 		scale: 512,
 		top: false,
 		scroll_x: 50,
@@ -233,7 +233,7 @@ const flags_actor_character = {
 };
 
 const tileset_outdoor_terrain_1 = {
-	image: "img/tilesets/lpc_terrain.png",
+	image: "tilesets/lpc_terrain.png",
 	size: 32,
 	fog: "#dfefff0f",
 	brushes: [
@@ -256,7 +256,7 @@ const tileset_outdoor_terrain_1 = {
 };
 
 const tileset_outdoor_terrain_2 = {
-	image: "img/tilesets/lpc_terrain.png",
+	image: "tilesets/lpc_terrain.png",
 	size: 32,
 	fog: "#dfefff0f",
 	brushes: [
@@ -312,7 +312,7 @@ const actor_player = {
 	box: [-8, -8, 8, 8],
 	flags: flags_actor_character,
 	sprite: {
-		image: "img/sprites/hero.png",
+		image: "sprites/hero.png",
 		scale_x: 24,
 		scale_y: 32,
 		frames_x: 4,

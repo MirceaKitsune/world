@@ -36,7 +36,7 @@ class Actor {
 
 		// The image file used by this actor, prepares the image and runs the main function once it loads
 		this.image = new Image();
-		this.image.src = this.settings.sprite.image;
+		this.image.src = PATH_IMAGES + this.settings.sprite.image;
 		this.image.onload = this.onload.bind(this);
 
 		// Create the actor element and append it to the parent element

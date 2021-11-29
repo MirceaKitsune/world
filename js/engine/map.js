@@ -19,7 +19,7 @@ class Map {
 			const element_overlay = html_create("div");
 			html_set(element_overlay, "class", "map_overlay");
 			html_css(element_overlay, "backgroundColor", overlay.color);
-			html_css(element_overlay, "backgroundImage", "url(" +  overlay.image + ")");
+			html_css(element_overlay, "backgroundImage", "url(" + PATH_IMAGES + overlay.image + ")");
 			html_css(element_overlay, "backgroundSize", overlay.scale ? WORLD_ZOOM * overlay.scale + "px" : "cover");
 			html_css(element_overlay, "zIndex", overlay.top ? 1 : 0);
 			html_parent(element_overlay, this.element, true);

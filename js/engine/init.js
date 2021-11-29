@@ -1,3 +1,12 @@
+// Base directories for different types of data
+const PATH_JS = "js/";
+const PATH_CSS = "css/";
+const PATH_IMAGES = "img/";
+
+// Core files that must be initialized in valid order
+const FILES_CSS = ["actor.css", "tileset.css", "map.css", "world.css"];
+const FILES_JS = ["engine/actor.js", "engine/actor_player.js", "engine/tileset.js", "engine/tileset_terrain.js", "engine/map.js", "engine/world.js"];
+
 // HTML helpers: Creates an element and returns the result
 function html_create(type) {
 	return document.createElement(type);
@@ -19,6 +28,31 @@ function html_set(element, property, value) {
 // HTML helpers: Sets a CSS property on an element style
 function html_css(element, property, value) {
 	element.style[property] = value;
+}
+
+// Includes a group of CSS styles
+function include_css(urls) {
+	for(let url of urls) {
+		const element = html_create("link");
+		html_set(element, "rel", "stylesheet");
+		html_set(element, "type", "text/css");
+		html_set(element, "href", PATH_CSS + url);
+		html_parent(element, document.body, true);
+	}
+}
+
+// Includes a group of JS scripts, each script loads the one after it once it finishes loading
+function include_js(urls) {
+	var element_last = null;
+	for(let url of urls) {
+		const element = html_create("script");
+		const element_load = function() {html_parent(element, document.body, true)};
+		html_set(element, "language", "JavaScript");
+		html_set(element, "type", "text/javascript");
+		html_set(element, "src", PATH_JS + url);
+		element_last ? element_last.onload = element_load : element_load();
+		element_last = element;
+	}
 }
 
 // Returns a random number in a given range
@@ -75,3 +109,8 @@ function get_random(object) {
 	}
 	return object;
 }
+
+// Include engine code and style files
+// The last script is the game we want to run, extracted from the "init" tag defined in the HTML
+include_css(FILES_CSS);
+include_js(FILES_JS.concat([document.getElementById("init").getAttribute("script")]));
