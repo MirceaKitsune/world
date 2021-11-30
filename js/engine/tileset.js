@@ -19,12 +19,8 @@ class Tileset {
 			y: this.map.grid.y * this.map.scale.y
 		};
 
-		// The image file used by this tileset, prepares the image and runs the main function once it loads
-		this.image = new Image();
-		this.image.src = PATH_IMAGES + this.settings.image;
-		this.image.onload = this.onload.bind(this);
-
 		// Create the tileset element and append it to the parent element
+		this.image = load_image(this.settings.image, this.onload.bind(this));
 		this.element = html_create("div");
 		html_set(this.element, "class", "tileset");
 		html_css(this.element, "width", px([this.scale.x * this.settings.size]));

@@ -4,7 +4,7 @@ const PATH_CSS = "css/";
 const PATH_IMAGES = "img/";
 
 // Core files that must be initialized in valid order
-const FILES_CSS = ["actor.css", "tileset.css", "map.css", "world.css"];
+const FILES_CSS = ["init.css", "actor.css", "tileset.css", "map.css", "world.css"];
 const FILES_JS = ["engine/actor.js", "engine/actor_player.js", "engine/tileset.js", "engine/tileset_terrain.js", "engine/map.js", "engine/world.js"];
 
 // HTML helpers: Creates an element and returns the result
@@ -18,6 +18,11 @@ function html_parent(element, parent, attach) {
 		parent.appendChild(element);
 	else
 		parent.removeChild(element);
+}
+
+// HTML helpers: Sets the text of an element
+function html_text(element, text) {
+	element.innerHTML = text;
 }
 
 // HTML helpers: Sets an attribute on an element
@@ -53,6 +58,19 @@ function include_js(urls) {
 		element_last ? element_last.onload = element_load : element_load();
 		element_last = element;
 	}
+}
+
+// Loads an image file and returns its element
+function load_image(url, onload) {
+	loading(true);
+
+	const image = new Image();
+	image.src = PATH_IMAGES + url;
+	image.onload = function() {
+		onload();
+		loading(false);
+	};
+	return image;
 }
 
 // Helper: Returns the value of location.search from the URL
@@ -108,6 +126,34 @@ function px(pixels) {
 // Helper: Returns true if a bounding box intersects another
 function intersects(box1, box2) {
 	return box1[2] >= box2[0] && box1[3] >= box2[1] && box1[0] <= box2[2] && box1[1] <= box2[3];
+}
+
+// Element loading and load progress display
+{
+	const element_label = html_create("div");
+	html_set(element_label, "class", "label");
+	html_parent(element_label, document.body, true);
+
+	var load = load_total = 0;
+	function loading(busy) {
+		// This function is first called with the busy argument whenever a new asset is included
+		// It must then be called without the busy argument once the asset has loaded, typically in its onload function
+		if(busy) {
+			++load;
+			++load_total;
+		} else {
+			--load;
+		}
+
+		// Update the load percentage with how many assets loaded from those that were included
+		// Once everything finishes loading we can show the world
+		if(load > 0) {
+			html_text(element_label, "Loading: " + Math.floor(100 - (load / load_total) * 100) + "%");
+		} else {
+			html_text(element_label, "");
+			world.load();
+		}
+	}
 }
 
 // Include engine code and style files

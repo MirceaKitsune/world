@@ -8,11 +8,11 @@ const WORLD_ZOOM = 2;
 class World {
 	constructor() {
 		// The base element everything in the world will be attached to
+		// This is attached to the document body by the loader once everything is ready
 		this.element = html_create("div");
 		html_set(this.element, "class", "world");
 		html_css(this.element, "width", WORLD_RESOLUTION_X);
 		html_css(this.element, "height", WORLD_RESOLUTION_Y);
-		html_parent(this.element, document.body, true);
 
 		// The tint element used for transition effects
 		this.element_tint = html_create("div");
@@ -26,6 +26,11 @@ class World {
 		// Child class storage objects
 		this.maps = [];
 		this.actors = [];
+	}
+
+	// Ran once the world is ready to show
+	load() {
+		html_parent(this.element, document.body, true);
 	}
 
 	// Registers data of a new map

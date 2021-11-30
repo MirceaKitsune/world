@@ -34,12 +34,8 @@ class Actor {
 		this.camera = false;
 		this.camera_pos = [undefined, undefined, undefined];
 
-		// The image file used by this actor, prepares the image and runs the main function once it loads
-		this.image = new Image();
-		this.image.src = PATH_IMAGES + this.settings.sprite.image;
-		this.image.onload = this.onload.bind(this);
-
 		// Create the actor element and append it to the parent element
+		this.image = load_image(this.settings.sprite.image, this.onload.bind(this));
 		this.element = html_create("div");
 		html_set(this.element, "class", "sprite");
 
