@@ -1,17 +1,30 @@
-// Overlays for outdoor map
-const overlays_outdoor = [
-	{
-		image: "backgrounds/clouds.png",
-		scale: 512,
-		top: false,
-		scroll_x: 50,
-		scroll_y: 0
-	},
-	{
-		color: "#4fdfffef",
-		top: false
-	}
-];
+// Brush overlays, background
+const overlay_background = {
+	image: "backgrounds/clouds.png",
+	color: "#4fdfff",
+	alpha: 1,
+	scale: 16,
+	scroll_x: 50,
+	scroll_y: 0,
+	fixed: -1
+};
+
+// Brush overlays, foreground
+const overlay_foreground = {
+	image: "backgrounds/clouds_shadow.png",
+	alpha: 0.1,
+	scale: 16,
+	scroll_x: 100,
+	scroll_y: 0,
+	fixed: 0
+};
+
+// Brush overlays, fog
+const overlay_fog = {
+	color: "#dfefff",
+	alpha: 0.05,
+	fixed: 0
+};
 
 // Flags for character actors
 const flags_actor_character = {
@@ -39,22 +52,24 @@ const flags_actor_character = {
 const tileset_outdoor_terrain_1 = {
 	image: "tilesets/lpc_terrain.png",
 	size: 32,
-	fog: "#dfefff0f",
 	brushes: [
 		// Terrain, base
 		{
 			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([3, 0], [0, 24], ["grass", "terrain"], 1)
+			tiles: lpc_tileset([3, 0], [0, 24], ["grass", "terrain"], 1),
+			overlays: [overlay_background, overlay_fog]
 		},
 		// Road
 		{
 			noise: lpc_noise_road,
-			tiles: lpc_tileset([0, 18], [0, 24], ["dirt", "road"], 0)
+			tiles: lpc_tileset([0, 18], [0, 24], ["dirt", "road"], 0),
+			overlays: undefined
 		},
 		// Terrain, 1st island
 		{
 			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([0, 0], [0, 24], ["grass", "terrain"], 3)
+			tiles: lpc_tileset([0, 0], [0, 24], ["grass", "terrain"], 3),
+			overlays: [overlay_foreground, overlay_fog]
 		}
 	]
 };
@@ -62,22 +77,24 @@ const tileset_outdoor_terrain_1 = {
 const tileset_outdoor_terrain_2 = {
 	image: "tilesets/lpc_terrain.png",
 	size: 32,
-	fog: "#dfefff0f",
 	brushes: [
 		// Terrain, base
 		{
 			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([6, 0], [3, 24], ["grass", "terrain"], 1)
+			tiles: lpc_tileset([6, 0], [3, 24], ["grass", "terrain"], 1),
+			overlays: [overlay_background, overlay_fog]
 		},
 		// Road
 		{
 			noise: lpc_noise_road,
-			tiles: lpc_tileset([3, 18], [3, 24], ["dirt", "road"], 0)
+			tiles: lpc_tileset([3, 18], [3, 24], ["dirt", "road"], 0),
+			overlays: undefined
 		},
 		// Terrain, 1st island
 		{
 			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([6, 0], [3, 24], ["grass", "terrain"], 3)
+			tiles: lpc_tileset([6, 0], [3, 24], ["grass", "terrain"], 3),
+			overlays: [overlay_foreground, overlay_fog]
 		}
 	]
 };
@@ -87,7 +104,6 @@ const map_outdoor_1 = {
 	temp_max: 0,
 	perspective: 0.1,
 	bound: true,
-	overlays: overlays_outdoor,
 	tileset: tileset_outdoor_terrain_1
 };
 
@@ -96,7 +112,6 @@ const map_outdoor_2 = {
 	temp_max: 1,
 	perspective: 0.1,
 	bound: true,
-	overlays: overlays_outdoor,
 	tileset: tileset_outdoor_terrain_2
 };
 

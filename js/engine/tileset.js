@@ -52,6 +52,60 @@ class Tileset {
 		];
 	}
 
+	// Attaches a group of overlay elements to the map or layer
+	overlay_set(layer, overlays) {
+		for(let overlay of overlays) {
+			const element_overlay = html_create("div");
+			html_set(element_overlay, "class", "tileset_overlay");
+			html_css(element_overlay, "opacity", overlay.alpha);
+			html_css(element_overlay, "backgroundColor", overlay.color);
+			html_css(element_overlay, "zIndex", overlay.fixed == 0 ? layer : overlay.fixed);
+			html_parent(element_overlay, overlay.fixed == 0 ? this.element : this.map.element, true);
+
+			// Prepare and configure the background image of this overlay if one is defined
+			if(overlay.image) {
+				const scale = WORLD_ZOOM * this.settings.size * overlay.scale / (overlay.fixed == 0 ? 2 : 1);
+				const onload = function() {
+					html_css(element_overlay, "backgroundImage", "url(" + image.src + ")");
+					html_css(element_overlay, "backgroundSize", overlay.scale ? px([scale]) : "cover");
+				};
+				const image = load_image(overlay.image, onload.bind(this));
+
+				// Animate the overlay background image, x direction
+				if(overlay.scroll_x > 0) {
+					element_overlay.animate([
+						{
+							backgroundPositionX: px([0])
+						}, {
+							backgroundPositionX: px([WORLD_RESOLUTION_X])
+						}
+					], {
+						duration: overlay.scroll_x * 1000 * (overlay.fixed == 0 ? 2 : 1),
+						direction: "normal",
+						easing: "linear",
+						iterations: Infinity
+					});
+				}
+
+				// Animate the overlay background image, y direction
+				if(overlay.scroll_y > 0) {
+					element_overlay.animate([
+						{
+							backgroundPositionY: px([0])
+						}, {
+							backgroundPositionY: px([WORLD_RESOLUTION_Y])
+						}
+					], {
+						duration: overlay.scroll_y * 1000 * (overlay.fixed == 0 ? 2 : 1),
+						direction: "normal",
+						easing: "linear",
+						iterations: Infinity
+					});
+				}
+			}
+		}
+	}
+
 	// Sets the data of a tile for this layer
 	tile_set(x, y, layer, tiles) {
 		for(let tile of tiles) {
@@ -59,9 +113,28 @@ class Tileset {
 			if(tile.noise && !tile.noise(x, y, layer))
 				continue;
 
-			// Draw the tile and add its flags to the layer if any are provided
+			// If this layer hasn't been set by a previous call, set it up now
+			if(!this.layers_element[layer]) {
+				this.layers_element[layer] = {};
+				this.layers_element[layer].tiles = [];
+
+				this.layers_element[layer].element = html_create("div");
+				html_set(this.layers_element[layer].element, "class", "tileset");
+				html_css(this.layers_element[layer].element, "zIndex", layer);
+				html_parent(this.layers_element[layer].element, this.element, true);
+
+				this.layers_element[layer].element_canvas = html_create("canvas");
+				html_set(this.layers_element[layer].element_canvas, "width", this.scale.x * this.settings.size);
+				html_set(this.layers_element[layer].element_canvas, "height", this.scale.y * this.settings.size);
+				html_parent(this.layers_element[layer].element_canvas, this.layers_element[layer].element, true);
+			}
+
+			// Draw this tile on the canvas element at the indicated position, the last call is drawn on top
+			const ctx = this.layers_element[layer].element_canvas.getContext("2d");
+			ctx.drawImage(this.image, tile.x * this.settings.size, tile.y * this.settings.size, this.settings.size, this.settings.size, x * this.settings.size, y * this.settings.size, this.settings.size, this.settings.size);
+	
+			// Add the flags of this tile to the layer if any are provided
 			// Data: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
-			this.tile_draw(x, y, layer, tile);
 			if(tile.flags) {
 				const data = [x * this.settings.size, y * this.settings.size, x * this.settings.size + this.settings.size, y * this.settings.size + this.settings.size, tile.flags];
 				if(!this.layers[layer])
@@ -69,35 +142,5 @@ class Tileset {
 				this.layers[layer].push(data);
 			}
 		}
-	}
-
-	// Draws a tile on the canvas of its layer
-	tile_draw(x, y, layer, tile) {
-		// If this layer hasn't been set by a previous call, set it up now
-		if(!this.layers_element[layer]) {
-			this.layers_element[layer] = {};
-			this.layers_element[layer].tiles = [];
-
-			this.layers_element[layer].element = html_create("div");
-			html_set(this.layers_element[layer].element, "class", "tileset");
-			html_css(this.layers_element[layer].element, "zIndex", layer);
-			html_parent(this.layers_element[layer].element, this.element, true);
-
-			this.layers_element[layer].element_canvas = html_create("canvas");
-			html_set(this.layers_element[layer].element_canvas, "width", this.scale.x * this.settings.size);
-			html_set(this.layers_element[layer].element_canvas, "height", this.scale.y * this.settings.size);
-			html_parent(this.layers_element[layer].element_canvas, this.layers_element[layer].element, true);
-
-			// If this tileset uses fog, apply the fog color as the background color of this layer's element
-			// If the fog setting is an array use the value for this height, if not it's a constant color
-			if(this.settings.fog) {
-				const fog = typeof this.settings.fog === "object" ? this.settings.fog[layer] : this.settings.fog;
-				html_css(this.layers_element[layer].element, "backgroundColor", fog);
-			}
-		}
-
-		// Draw this tile on the canvas element at the indicated position, the last call is drawn on top
-		const ctx = this.layers_element[layer].element_canvas.getContext("2d");
-		ctx.drawImage(this.image, tile.x * this.settings.size, tile.y * this.settings.size, this.settings.size, this.settings.size, x * this.settings.size, y * this.settings.size, this.settings.size, this.settings.size);
 	}
 }

@@ -13,57 +13,6 @@ class Map {
 		this.element = html_create("div");
 		html_set(this.element, "class", "map");
 
-		// Add overlays to the map element
-		for(let overlay of this.settings.overlays) {
-			// Create the overlay element and apply its settings
-			const element_overlay = html_create("div");
-			html_set(element_overlay, "class", "map_overlay");
-			html_css(element_overlay, "backgroundColor", overlay.color);
-			html_css(element_overlay, "zIndex", overlay.top ? 1 : 0);
-			html_parent(element_overlay, this.element, true);
-
-			// Prepare and configure the background image of this overlay if one is defined
-			if(overlay.image) {
-				const onload = function() {
-					html_css(element_overlay, "backgroundImage", "url(" + image.src + ")");
-					html_css(element_overlay, "backgroundSize", overlay.scale ? WORLD_ZOOM * overlay.scale + "px" : "cover");
-				};
-				const image = load_image(overlay.image, onload.bind(this));
-
-				// Animate the overlay background image, x direction
-				if(overlay.scroll_x > 0) {
-					element_overlay.animate([
-						{
-							backgroundPositionX: "0px"
-						}, {
-							backgroundPositionX: WORLD_RESOLUTION_X + "px"
-						}
-					], {
-						duration: overlay.scroll_x * 1000,
-						direction: "normal",
-						easing: "linear",
-						iterations: Infinity
-					});
-				}
-
-				// Animate the overlay background image, y direction
-				if(overlay.scroll_y > 0) {
-					element_overlay.animate([
-						{
-							backgroundPositionY: "0px"
-						}, {
-							backgroundPositionY: WORLD_RESOLUTION_Y + "px"
-						}
-					], {
-						duration: overlay.scroll_y * 1000,
-						direction: "normal",
-						easing: "linear",
-						iterations: Infinity
-					});
-				}
-			}
-		}
-
 		// Create the map view element
 		// Center the map view element in the main element, both when it's smaller or when it is larger
 		this.element_view = html_create("div");

@@ -24,13 +24,13 @@ class TilesetTerrain extends Tileset {
 		y += this.offset.y;
 
 		// This tile must test positive for the noise check
-		if(!brush.noise(x, y, layer))
+		if(brush.noise && !brush.noise(x, y, layer))
 			return false;
 
 		// The neighbors of this tile must test positive for the noise check
 		const neighbors = this.neighbors(x, y);
 		for(let neighbor of neighbors)
-			if(!brush.noise(neighbor.x, neighbor.y, layer))
+			if(brush.noise && !brush.noise(neighbor.x, neighbor.y, layer))
 				return false;
 
 		// All checks passed, this is a valid tile we can draw to
@@ -114,13 +114,17 @@ class TilesetTerrain extends Tileset {
 
 	// Generator function for terrain
 	generate() {
-		// Paint the floors and walls of each brush
+		// Paint the tiles of each brush and configure its overlays
 		// When the next brush is calculated, it starts from the height of the previous layer
 		// The layer the floor is drawn on is offset by the length of its wall
 		var layer = 0;
 		for(let brush of this.settings.brushes) {
-			const height = brush.tiles[TILE_WALL_LEFT] && brush.tiles[TILE_WALL_MIDDLE] && brush.tiles[TILE_WALL_RIGHT] ? brush.tiles[TILE_WALL_MIDDLE].length : 0;
-			this.paint(layer, height, brush);
+			const height = brush.tiles && brush.tiles[TILE_WALL_LEFT] && brush.tiles[TILE_WALL_MIDDLE] && brush.tiles[TILE_WALL_RIGHT] ? brush.tiles[TILE_WALL_MIDDLE].length : 0;
+			if(brush.overlays)
+				this.overlay_set(layer + height, brush.overlays);
+			if(brush.tiles)
+				this.paint(layer, height, brush);
+
 			if(layer + height > layer)
 				layer = layer + height;
 		}
