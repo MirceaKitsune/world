@@ -4,6 +4,7 @@ const flags_actor_character = {
 		dirt: 1
 	},
 	solid: {
+		solid: 1,
 		wall: 1
 	},
 	climbable: {
@@ -21,6 +22,7 @@ const flags_actor_character = {
 	friction: {
 		path: 1,
 		cave: 0.5,
+		gravel: 0.75,
 		grass: 0.625,
 		dirt: 0.5,
 		stone: 0.5

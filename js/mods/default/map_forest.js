@@ -17,19 +17,19 @@ const tileset_forest = {
 		// Terrain, base
 		{
 			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([6, 0], [3, 24], ["grass", "terrain"], 1, false),
+			tiles: lpc_tileset([6, 0], [3, 30], ["grass", "terrain"], 1, false),
 			overlays: [overlay_background, overlay_fog_forest]
 		},
 		// Road
 		{
 			noise: lpc_noise_road,
-			tiles: lpc_tileset([3, 18], [3, 24], ["dirt", "road"], 0, false),
+			tiles: lpc_tileset([3, 18], [3, 30], ["dirt", "road"], 0, false),
 			overlays: undefined
 		},
 		// Terrain, 1st island
 		{
 			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([6, 0], [3, 24], ["grass", "terrain"], 4, false),
+			tiles: lpc_tileset([6, 0], [3, 30], ["grass", "terrain"], 4, false),
 			overlays: [overlay_foreground, overlay_fog_forest]
 		}
 	]
@@ -42,19 +42,19 @@ const tileset_forest_cave = {
 		// Terrain, base
 		{
 			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([3, 18], [3, 24], ["grass", "terrain"], 1, true),
+			tiles: lpc_tileset([3, 18], [3, 30], ["dirt", "terrain"], 1, false),
 			overlays: [overlay_background_cave, overlay_fog_forest_cave]
 		},
 		// Road
 		{
 			noise: lpc_noise_road,
-			tiles: lpc_tileset([12, 18], [3, 24], ["dirt", "road"], 0, true),
+			tiles: lpc_tileset([12, 18], [3, 30], ["dirt", "road"], 0, false),
 			overlays: undefined
 		},
 		// Terrain, 1st island
 		{
 			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([3, 12], [3, 24], ["grass", "terrain"], 3, true),
+			tiles: lpc_tileset([3, 24], [3, 30], ["stone", "terrain"], 4, true),
 			overlays: [overlay_foreground_cave, overlay_fog_forest_cave]
 		}
 	]
