@@ -1,7 +1,7 @@
 // Flags for character actors
 const flags_actor_character = {
 	spawn: {
-		dirt: 1
+		road: 1
 	},
 	solid: {
 		solid: 1,

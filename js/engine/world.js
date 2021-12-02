@@ -30,6 +30,41 @@ class World {
 
 	// Ran once the world is ready to show
 	load() {
+		// Now that maps and actors have loaded, spawn actors on valid tiles
+		// Position: 0 = map, 1 = x, 2 = y, 3 = layer
+		for(let actor of this.actors) {
+			var positions = [];
+			for(let maps in this.maps) {
+				const map = this.maps[maps];
+
+				// Store the topmost layer of each valid position, remove when an invalid tile covers it
+				var pos_layer = {};
+				for(let layers in map.tileset.layers) {
+					const layer = map.tileset.layers[layers];
+					for(let tile of layer) {
+						const pos = JSON.stringify([tile[0] + (tile[2] - tile[0]) / 2, tile[1] + (tile[3] - tile[1]) / 2]);
+						if(actor.flag("spawn", tile[4]) > 0)
+							pos_layer[pos] = layers;
+						else
+							delete pos_layer[pos];
+					}
+				}
+
+				// Extract local positions from the index and add them to the full position list
+				for(let i in pos_layer) {
+					const pos = JSON.parse(i);
+					positions.push([maps, pos[0], pos[1], pos_layer[i]]);
+				}
+			}
+
+			// Pick a random position and place the actor there
+			const position = get_random(positions);
+			const angle = Math.floor(Math.random() * 5);
+			actor.map_set(this.maps[position[0]]);
+			actor.move(position[1], position[2], position[3], angle);
+		}
+
+		// Attach the world element to the document body
 		html_parent(this.element, document.body, true);
 	}
 
@@ -69,12 +104,8 @@ class World {
 		// As there's no multiplayer support at this time only one player entity is needed
 		const settings = this.data_actors[name];
 		const object = new ActorPlayer(this, settings);
-		this.actors.push(object);
-
-		// Pick a random map to spawn the player in
-		const map = get_random(this.maps);
 		object.camera = true;
-		object.map_set(map, 0, 0, 0);
+		this.actors.push(object);
 	}
 
 	// Returns the map located at the given grid position

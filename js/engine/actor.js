@@ -25,10 +25,8 @@ class Actor {
 		this.data.anim = null;
 
 		// Private data which shouldn't need to be accessed by other instances or classes
-		// TODO: We use an interval to check for spawn because actors may load before tiles, fix this by guaranteeing proper load order
 		this.interval_velocity = null;
 		this.interval_camera = null;
-		this.interval_spawn = setInterval(this.spawn.bind(this), WORLD_RATE);
 		this.timeout_map = null;
 		this.map = null;
 		this.camera = false;
@@ -39,10 +37,8 @@ class Actor {
 		this.element = html_create("div");
 		html_set(this.element, "class", "sprite");
 
-		// Set default position and angle, the actor should be moved to a valid position by the spawn function
-		this.position_set(0, 0);
-		this.layer_set(0);
-		this.animation(0, this.settings.idle);
+		// Set default layer position and angle
+		this.move(0, 0, 0, 0);
 	}
 
 	// Executed when the actor was spawned, must be replaced by child classes
@@ -59,8 +55,37 @@ class Actor {
 		this.init();
 	}
 
+	// Changes the position layer or angle of the actor
+	move(x, y, layer, angle) {
+		// Set the x position, sprite pivot is located at the center
+		if(!isNaN(x)) {
+			this.data.pos[0] = x;
+			html_css(this.element, "left", this.data.pos[0] - this.settings.sprite.scale_x / 2);
+		}
+
+		// Set the y position, sprite pivot is located at the bottom
+		if(!isNaN(y)) {
+			this.data.pos[1] = y;
+			html_css(this.element, "top", this.data.pos[1] - this.settings.sprite.scale_y);
+		}
+
+		// Set the layer
+		if(!isNaN(layer)) {
+			this.data.layer = layer;
+			html_css(this.element, "zIndex", this.data.layer);
+		}
+
+		// Set the angle, assumes the idle animation of the sprite
+		if(!isNaN(angle))
+			this.animation(0, this.settings.idle);
+
+		// If this actor has the camera grabbed initialize camera updates
+		if(this.camera && !this.interval_camera)
+			this.interval_camera = setInterval(this.camera_update.bind(this), WORLD_RATE);
+	}
+
 	// Removes the actor from the old map and attach it to the new one
-	map_set(map, x, y, angle) {
+	map_set(map) {
 		// Detach this actor from the previous map
 		if(this.map) {
 			html_parent(this.element, this.map.element_view, false);
@@ -70,9 +95,8 @@ class Actor {
 
 		// Set the new map and relevant effects
 		this.map = map;
-		this.position_set(x, y);
-		this.animation(angle, this.settings.anim_static);
 		this.camera_pos = [undefined, undefined, undefined];
+		this.move(0, 0, undefined, undefined);
 
 		// Attach the actor to the new map
 		html_parent(this.element, this.map.element_view, true);
@@ -110,7 +134,8 @@ class Actor {
 		// Set timeout and transition effects for changing the map
 		this.world.set_tint(false, ACTOR_TRANSITION_TIME / 2);
 		this.timeout_map = setTimeout(function() {
-			this.map_set(map, pos_x, pos_y, angle);
+			this.map_set(map);
+			this.move(pos_x, pos_y, undefined, angle);
 			this.world.set_tint(true, ACTOR_TRANSITION_TIME / 2);
 			this.timeout_map = null;
 		}.bind(this), ACTOR_TRANSITION_TIME / 2 * 1000);
@@ -165,51 +190,6 @@ class Actor {
 			if(list.includes(flags))
 				return this.settings.flags[category][flags];
 		return null;
-	}
-
-	// Check that a valid position is available and moves the actor to it
-	spawn() {
-		// We require a map to spawn on
-		if(!this.map)
-			return;
-
-		// We want to get the topmost floor of each possible position, last valid tile overrides this layer
-		// Potential positions are stored as a keys with the last layer of the position as the value
-		var positions = {};
-		for(let layers in this.map.tileset.layers) {
-			for(let tile of this.map.tileset.layers[layers]) {
-				// We want the position to be the center of the tile
-				const center_x = tile[0] + (tile[2] - tile[0]) / 2;
-				const center_y = tile[1] + (tile[3] - tile[1]) / 2;
-				const center = [center_x, center_y];
-
-				// Add or update this position if it's a valid floor, remove it otherwise
-				if(this.flag("spawn", tile[4]) > 0)
-					positions[center.toString()] = layers;
-				else
-					delete positions[center.toString()];
-			}
-		}
-
-		// Skip if no valid positions were found this attempt
-		if(Object.keys(positions).length == 0)
-			return;
-
-		// Extract a random position from the property and its topmost layer from the value
-		const keys = Object.keys(positions);
-		const index = keys[Math.floor(Math.random() * keys.length)];
-		const pos = index.split(",");
-		const layer = positions[index];
-
-		// Apply the position and layer
-		const angle = Math.floor(Math.random() * 5);
-		this.position_set(Number(pos[0]), Number(pos[1]));
-		this.layer_set(layer);
-		this.animation(angle, this.settings.anim_static);
-
-		// We have spawned, stop checking
-		clearInterval(this.interval_spawn);
-		this.interval_spawn = null;
 	}
 
 	// Applies the given frame and animation to the sprite
@@ -319,7 +299,7 @@ class Actor {
 		if(solid_y)
 			this.data.vel[1] = 0;
 		if(layer_path && layer)
-			this.layer_set(layer);
+			this.move(undefined, undefined, layer, undefined);
 		if(flags)
 			this.data.flags = flags;
 		if(transport_dir.x != 0 || transport_dir.y != 0 || transport_dir.z != 0)
@@ -358,7 +338,7 @@ class Actor {
 		// This must never be larger than the velocity itself, if it passes zero and flips signs the actor will reverse direction instead of stopping
 		const transfer_x = this.data.vel[0] / 2;
 		const transfer_y = this.data.vel[1] / 2;
-		this.position_set(this.data.pos[0] + transfer_x, this.data.pos[1] + transfer_y);
+		this.move(this.data.pos[0] + transfer_x, this.data.pos[1] + transfer_y, undefined, undefined);
 
 		// Determine the friction this actor is experiencing based on the surface they're moving on
 		// We lose the transition amount from the velocity based on friction
@@ -393,27 +373,5 @@ class Actor {
 			const duration = movement > 0 ? 1 / movement * this.settings.anim_moving : this.settings.anim_static;
 			this.animation(this.data.angle, duration);
 		}
-	}
-
-	// Teleports the actor to this position
-	position_set(x, y) {
-		// Offset the sprite so that the pivot point is centered horizontally and at the bottom vertically
-		this.data.pos = [x, y];
-		html_css(this.element, "left", this.data.pos[0] - this.settings.sprite.scale_x / 2);
-		html_css(this.element, "top", this.data.pos[1] - this.settings.sprite.scale_y);
-
-		// If this actor has the camera grabbed set a new camera position
-		if(this.camera && !this.interval_camera)
-			this.interval_camera = setInterval(this.camera_update.bind(this), WORLD_RATE);
-	}
-
-	// Sets the solidity level of this actor
-	layer_set(layer) {
-		this.data.layer = layer;
-		html_css(this.element, "zIndex", this.data.layer);
-
-		// If this actor has the camera grabbed set a new camera position
-		if(this.camera && !this.interval_camera)
-			this.interval_camera = setInterval(this.camera_update.bind(this), WORLD_RATE);
 	}
 }

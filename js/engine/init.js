@@ -68,7 +68,6 @@ function include_js(urls) {
 // Loads an image file and returns its element
 function load_image(url, onload) {
 	loading(true);
-
 	const image = new Image();
 	image.src = PATH_IMAGES + url;
 	image.onload = function() {
@@ -137,6 +136,7 @@ function intersects(box1, box2) {
 {
 	const element_label = html_create("div");
 	html_set(element_label, "class", "label");
+	html_text(element_label, "Loading...");
 	html_parent(element_label, document.body, true);
 
 	var load = load_total = 0;
@@ -155,8 +155,8 @@ function intersects(box1, box2) {
 		if(load > 0) {
 			html_text(element_label, "Loading: " + Math.floor(100 - (load / load_total) * 100) + "%");
 		} else {
-			html_text(element_label, "");
 			world.load();
+			html_text(element_label, "");
 		}
 	}
 }

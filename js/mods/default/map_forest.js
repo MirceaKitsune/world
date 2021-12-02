@@ -45,12 +45,6 @@ const tileset_forest_cave = {
 			tiles: lpc_tileset([3, 18], [3, 30], ["dirt", "terrain"], 1, false),
 			overlays: [overlay_background_cave, overlay_fog_forest_cave]
 		},
-		// Road
-		{
-			noise: lpc_noise_road,
-			tiles: lpc_tileset([12, 18], [3, 30], ["dirt", "road"], 0, false),
-			overlays: undefined
-		},
 		// Terrain, 1st island
 		{
 			noise: lpc_noise_terrain,
