@@ -31,12 +31,14 @@ class Map {
 	// Activate this map
 	activate() {
 		html_parent(this.element, this.world.element, true);
+		html_unset(this.element, "hidden");
 		this.active = true;
 	}
 
 	// Deactivate this map
 	deactivate() {
 		html_parent(this.element, this.world.element, false);
+		html_set(this.element, "hidden", true);
 		this.active = false;
 	}
 }

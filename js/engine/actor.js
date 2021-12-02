@@ -60,7 +60,7 @@ class Actor {
 	}
 
 	// Removes the actor from the old map and attach it to the new one
-	map_set(map, x, y) {
+	map_set(map, x, y, angle) {
 		// Detach this actor from the previous map
 		if(this.map) {
 			html_parent(this.element, this.map.element_view, false);
@@ -71,6 +71,7 @@ class Actor {
 		// Set the new map and relevant effects
 		this.map = map;
 		this.position_set(x, y);
+		this.animation(angle, this.settings.anim_static);
 		this.camera_pos = [undefined, undefined, undefined];
 
 		// Attach the actor to the new map
@@ -79,80 +80,40 @@ class Actor {
 			this.map.activate();
 	}
 
-	// Determines if the current map should transport us to another map based on our location
-	map_move() {
-		// We require a current map to check for other maps it could lead to
-		if(!this.map)
+	// Takes us to another map on the map grid in the given direction
+	map_set_grid(dir) {
+		// Don't interrupt an existing transition
+		if(this.timeout_map)
 			return;
 
-		// Check which map edges we are touching, movement direction is also accounted for here
-		// Angle, clockwise direction: 0 = top, 1 = right, 2 = bottom, 3 = left
-		const touching = [
-			this.data.vel[1] < 0 && this.data.pos[1] <= 0,
-			this.data.vel[0] > 0 && this.data.pos[0] >= this.map.scale.x,
-			this.data.vel[1] > 0 && this.data.pos[1] >= this.map.scale.y,
-			this.data.vel[0] < 0 && this.data.pos[0] <= 0
-		];
-		if(!touching[0] && !touching[1] && !touching[2] && !touching[3])
-			return;
-
-		// Determine the grid position of the map we should move to from this direction
-		var grid_x = this.map.grid.x;
-		var grid_y = this.map.grid.y;
-		if(touching[0])
-			grid_y -= 1;
-		if(touching[1])
-			grid_x += 1;
-		if(touching[2])
-			grid_y += 1;
-		if(touching[3])
-			grid_x -= 1;
-
-		// Fetch the map at this grid position if one exists
-		const grid = vector([grid_x, grid_y, this.map.grid.z]);
+		// Determine the grid position of the map we should move to then fetch the map at that position
+		const grid = vector([this.map.grid.x + dir.x, this.map.grid.y + dir.y, this.map.grid.z + dir.z]);
 		const map = this.world.map_at_grid(grid);
 		if(!map)
 			return;
 
-		// Determine the position to apply to the player so they correctly come out the other end
+		// Determine the position and angle to apply to the actor so they correctly come out the other end
 		var pos_x = this.data.pos[0];
 		var pos_y = this.data.pos[1];
-		if(touching[0])
-			pos_y = map.scale.y;
-		if(touching[1])
-			pos_x = 0;
-		if(touching[2])
-			pos_y = 0;
-		if(touching[3])
+		var angle = this.data.angle;
+		if(dir.x < 0)
 			pos_x = map.scale.x;
-
-		// Check if we have a valid road tile at the current location on the same layer
-		var has_old = false;
-		const box_old = [this.data.pos[0] + this.data.box[0], this.data.pos[1] + this.data.box[1], this.data.pos[0] + this.data.box[2], this.data.pos[1] + this.data.box[3]];
-		for(let tile of this.map.tileset.layers[this.data.layer])
-			if(intersects(box_old, tile))
-				has_old = this.flag("road", tile[4]) > 0;
-		if(!has_old)
-			return
-
-		// Check if we have a valid road tile at the new location on the same layer
-		var has_new = false;
-		const box_new = [pos_x + this.data.box[0], pos_y + this.data.box[1], pos_x + this.data.box[2], pos_y + this.data.box[3]];
-		for(let tile of map.tileset.layers[this.data.layer])
-			if(intersects(box_new, tile))
-				has_new = this.flag("road", tile[4]) > 0;
-		if(!has_new)
-			return
+		if(dir.x > 0)
+			pos_x = 0;
+		if(dir.y < 0)
+			pos_y = map.scale.y;
+		if(dir.y > 0)
+			pos_y = 0;
+		if(dir.z != 0)
+			angle = 2;
 
 		// Set timeout and transition effects for changing the map
-		if(!this.timeout_map) {
-			this.world.set_tint(false, ACTOR_TRANSITION_TIME / 2);
-			this.timeout_map = setTimeout(function() {
-				this.map_set(map, pos_x, pos_y);
-				this.world.set_tint(true, ACTOR_TRANSITION_TIME / 2);
-				this.timeout_map = null;
-			}.bind(this), ACTOR_TRANSITION_TIME / 2 * 1000);
-		}
+		this.world.set_tint(false, ACTOR_TRANSITION_TIME / 2);
+		this.timeout_map = setTimeout(function() {
+			this.map_set(map, pos_x, pos_y, angle);
+			this.world.set_tint(true, ACTOR_TRANSITION_TIME / 2);
+			this.timeout_map = null;
+		}.bind(this), ACTOR_TRANSITION_TIME / 2 * 1000);
 	}
 
 	// Focuses the camera on the position of the actor
@@ -195,7 +156,7 @@ class Actor {
 		}
 
 		// Apply camera position and zoom by using a translate3d CSS transform on the world element
-		html_css(this.map.element_view, "transform", "perspective(0px) translate3d(" + this.camera_pos[0] + "px, " + this.camera_pos[1] + "px, " + this.camera_pos[2] + "px)");
+		html_css(this.map.element_view, "transform", "perspective(0px) translate3d(" + px([this.camera_pos[0]]) + ", " + px([this.camera_pos[1]]) + ", " + px([this.camera_pos[2]]) + ")");
 	}
 
 	// Check if a flag exists in the list and return its value if yes
@@ -208,6 +169,10 @@ class Actor {
 
 	// Check that a valid position is available and moves the actor to it
 	spawn() {
+		// We require a map to spawn on
+		if(!this.map)
+			return;
+
 		// We want to get the topmost floor of each possible position, last valid tile overrides this layer
 		// Potential positions are stored as a keys with the last layer of the position as the value
 		var positions = {};
@@ -279,8 +244,8 @@ class Actor {
 
 	// Applies surface effects to the actor from the topmost surface we're about to touch given our current velocity
 	surface_update() {
-		// No movement means there's no collision to check for
-		if(this.data.vel[0] == 0 && this.data.vel[1] == 0)
+		// No map or no movement means no surfaces to check for
+		if(!this.map || (this.data.vel[0] == 0 && this.data.vel[1] == 0))
 			return;
 
 		// The position we're interested in checking is the actor's current position plus the desired offsets
@@ -296,6 +261,7 @@ class Actor {
 		var layer = null;
 		var layer_path = false;
 		var flags = null;
+		var transport_dir = vector([0, 0, 0]);
 
 		// Go through the tiles on each layer and pick relevant data from tiles who's boundaries the actor is within
 		// This relies on layers being scanned in bottom to top order, topmost entries must be allowed to override lower ones
@@ -305,11 +271,28 @@ class Actor {
 				const touching_y = intersects(box_y, tile);
 				if(!touching_x && !touching_y)
 					continue;
+				flags = tile[4];
+
+				// Check if the actor is touching a tile that should transport us to another map
+				// Horizontal transports are based on which map edges we're touching while moving
+				if(this.flag("transport", flags) > 0) {
+					if(this.data.vel[0] < 0 && this.data.pos[0] <= 0)
+						transport_dir.x = -1;
+					if(this.data.vel[0] > 0 && this.data.pos[0] >= this.map.scale.x)
+						transport_dir.x = 1;
+					if(this.data.vel[1] < 0 && this.data.pos[1] <= 0)
+						transport_dir.y = -1;
+					if(this.data.vel[1] > 0 && this.data.pos[1] >= this.map.scale.y)
+						transport_dir.y = 1;
+				} else if(this.flag("transport_up", flags) > 0) {
+					transport_dir.z = 1;
+				} else if(this.flag("transport_down", flags) > 0) {
+					transport_dir.z = -1;
+				}
 
 				// Remember the last target layer we touched and inherit its flags
 				// If the actor is standing on a path tile all floors become valid targets
-				flags = tile[4];
-				if(this.flag("path", flags) > 0)
+				if(this.flag("climbable", flags) > 0)
 					layer_path = true;
 				else
 					layer = layers;
@@ -339,6 +322,8 @@ class Actor {
 			this.layer_set(layer);
 		if(flags)
 			this.data.flags = flags;
+		if(transport_dir.x != 0 || transport_dir.y != 0 || transport_dir.z != 0)
+			this.map_set_grid(transport_dir);
 	}
 
 	// Sets a velocity which is applied once, used for pushing objects
@@ -368,7 +353,6 @@ class Actor {
 		this.data.vel[0] += this.data.acc[0];
 		this.data.vel[1] += this.data.acc[1];
 		this.surface_update();
-		this.map_move();
 
 		// Amount by which to convert velocity to a change in position, halved per call by default
 		// This must never be larger than the velocity itself, if it passes zero and flips signs the actor will reverse direction instead of stopping

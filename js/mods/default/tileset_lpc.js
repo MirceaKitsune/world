@@ -63,7 +63,7 @@ const lpc_noise_tile_cave_false = function(x, y, layer) {
 }
 
 // Returns the corresponding tile set from this top left corner
-function lpc_tileset(pos_floor, pos_wall, flags, height) {
+function lpc_tileset(pos_floor, pos_wall, flags, height, inside) {
 	var tiles = {};
 
 	// Set the floor tiles
@@ -110,7 +110,7 @@ function lpc_tileset(pos_floor, pos_wall, flags, height) {
 	const wall_x = pos_wall[0];
 	const wall_y = pos_wall[1];
 	const flags_wall = flags.concat(flags, ["wall"]);
-	const flags_cave = flags.concat(flags, ["cave"]);
+	const flags_cave = flags.concat(flags, ["cave", inside ? "cave_out" : "cave_in"]);
 	if(height >= 4) {
 		// Configuration for a 4 tile tall wall
 		tiles.wall_left = [

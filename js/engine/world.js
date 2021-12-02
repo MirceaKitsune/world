@@ -50,7 +50,8 @@ class World {
 		for(let x = 0; x < data.maps_x; x++) {
 			for(let y = 0; y < data.maps_y; y++) {
 				const temp = Math.sin((x + WORLD_SEED) * (y + WORLD_SEED));
-				for(let map of Object.values(this.data_maps)) {
+				for(let map_name of data.maps) {
+					const map = this.data_maps[map_name];
 					if(temp >= map.temp_min && temp <= map.temp_max) {
 						const scale = vector([data.scale_x, data.scale_y]);
 						const grid = vector([x, y, data.height]);
@@ -73,7 +74,7 @@ class World {
 		// Pick a random map to spawn the player in
 		const map = get_random(this.maps);
 		object.camera = true;
-		object.map_set(map, 0, 0);
+		object.map_set(map, 0, 0, 0);
 	}
 
 	// Returns the map located at the given grid position

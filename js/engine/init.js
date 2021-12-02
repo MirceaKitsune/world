@@ -30,6 +30,11 @@ function html_set(element, property, value) {
 	element.setAttribute(property, value);
 }
 
+// HTML helpers: Unsets an attribute from an element
+function html_unset(element, property) {
+	element.removeAttribute(property);
+}
+
 // HTML helpers: Sets a CSS property on an element style
 function html_css(element, property, value) {
 	element.style[property] = value;
