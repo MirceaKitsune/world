@@ -24,7 +24,7 @@ class Map {
 		html_parent(this.element_view, this.element, true);
 
 		// Create the tileset for this map, starts inactive by default
-		this.tileset = new TilesetTerrain(this, settings.tileset);
+		this.tileset = new TilesetTerrain(this, settings.brushes, settings.size);
 		this.active = false;
 	}
 

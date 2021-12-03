@@ -1,3 +1,9 @@
+// Noise function for this map
+const noise_group_forest = function(x, y, z) {
+	const noise = noise_terrain(x, y);
+	return noise > 0.5 && noise <= 1;
+}
+
 // Brush overlays, fog
 const overlay_fog_forest = {
 	color: "#7fdfbf",
@@ -10,64 +16,66 @@ const overlay_fog_forest_cave = {
 	alpha: 0.1
 };
 
-const tileset_forest = {
-	image: "tilesets/lpc_terrain.png",
-	size: 32,
-	brushes: [
-		// Terrain, base
-		{
-			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([6, 0], [3, 30], ["grass", "terrain"], 1, false),
-			overlays: [overlay_background, overlay_fog_forest]
-		},
-		// Road
-		{
-			noise: lpc_noise_road,
-			tiles: lpc_tileset([3, 18], [3, 30], ["dirt", "road"], 0, false),
-			overlays: undefined
-		},
-		// Terrain, 1st island
-		{
-			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([6, 0], [3, 30], ["grass", "terrain"], 4, false),
-			overlays: [overlay_foreground, overlay_fog_forest]
-		}
-	]
-};
+const brushes_forest = [
+	// Terrain, base
+	{
+		image: "tilesets/lpc_terrain.png",
+		height: 0,
+		noise: lpc_noise_terrain,
+		tiles: lpc_tileset([6, 0], [3, 30], ["grass", "terrain"], 1, false),
+		overlays: [overlay_background, overlay_fog_forest]
+	},
+	// Road
+	{
+		image: "tilesets/lpc_terrain.png",
+		height: 1,
+		noise: lpc_noise_road,
+		tiles: lpc_tileset([3, 18], [3, 30], ["dirt", "road"], 0, false),
+		overlays: undefined
+	},
+	// Terrain, 1st island
+	{
+		image: "tilesets/lpc_terrain.png",
+		height: 1,
+		noise: lpc_noise_terrain,
+		tiles: lpc_tileset([6, 0], [3, 30], ["grass", "terrain"], 4, false),
+		overlays: [overlay_foreground, overlay_fog_forest]
+	}
+];
 
-const tileset_forest_cave = {
-	image: "tilesets/lpc_terrain.png",
-	size: 32,
-	brushes: [
-		// Terrain, base
-		{
-			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([3, 18], [3, 30], ["dirt", "terrain"], 1, false),
-			overlays: [overlay_background_cave, overlay_fog_forest_cave]
-		},
-		// Terrain, 1st island
-		{
-			noise: lpc_noise_terrain,
-			tiles: lpc_tileset([3, 24], [3, 30], ["stone", "terrain"], 4, true),
-			overlays: [overlay_foreground_cave, overlay_fog_forest_cave]
-		}
-	]
-};
+const brushes_forest_cave = [
+	// Terrain, base
+	{
+		image: "tilesets/lpc_terrain.png",
+		height: 0,
+		noise: lpc_noise_terrain,
+		tiles: lpc_tileset([3, 18], [3, 30], ["dirt", "terrain"], 1, false),
+		overlays: [overlay_background_cave, overlay_fog_forest_cave]
+	},
+	// Terrain, 1st island
+	{
+		image: "tilesets/lpc_terrain.png",
+		height: 1,
+		noise: lpc_noise_terrain,
+		tiles: lpc_tileset([3, 24], [3, 30], ["stone", "terrain"], 4, true),
+		overlays: [overlay_foreground_cave, overlay_fog_forest_cave]
+	}
+];
 
 const map_forest = {
-	temp_min: 0,
-	temp_max: 1,
+	noise: noise_group_forest,
 	perspective: 0.1,
 	bound: true,
-	tileset: tileset_forest
+	size: 32,
+	brushes: brushes_forest
 };
 
 const map_forest_cave = {
-	temp_min: 0,
-	temp_max: 1,
+	noise: noise_group_forest,
 	perspective: 0.1,
 	bound: true,
-	tileset: tileset_forest_cave
+	size: 32,
+	brushes: brushes_forest_cave
 };
 
 world.register_data_map("outdoor_forest", map_forest);

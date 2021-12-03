@@ -232,7 +232,7 @@ class Actor {
 		// We want to predict movements per direction, store bounding boxes with the X and Y offsets separately
 		// Position: 0 = x, 1 = y
 		// Box: 0 = left, 1 = top, 2 = right, 3 = bottom
-		// Tile: 0 = left, 1 = top, 2 = right, 3 = bottom, 4 = flags
+		// Tile: 0 = x, 1 = y, 2 = flags
 		const box_x = [this.data.pos[0] + this.data.box[0] + this.data.vel[0], this.data.pos[1] + this.data.box[1], this.data.pos[0] + this.data.box[2] + this.data.vel[0], this.data.pos[1] + this.data.box[3]];
 		const box_y = [this.data.pos[0] + this.data.box[0], this.data.pos[1] + this.data.box[1] + this.data.vel[1], this.data.pos[0] + this.data.box[2], this.data.pos[1] + this.data.box[3] + this.data.vel[1]];
 
@@ -247,11 +247,17 @@ class Actor {
 		// This relies on layers being scanned in bottom to top order, topmost entries must be allowed to override lower ones
 		for(let layers in this.map.tileset.layers) {
 			for(let tile of this.map.tileset.layers[layers]) {
-				const touching_x = intersects(box_x, tile);
-				const touching_y = intersects(box_y, tile);
+				const tile_box = [
+					tile[0] * this.map.tileset.size,
+					tile[1] * this.map.tileset.size,
+					tile[0] * this.map.tileset.size + this.map.tileset.size,
+					tile[1] * this.map.tileset.size + this.map.tileset.size
+				];
+				const touching_x = intersects(box_x, tile_box);
+				const touching_y = intersects(box_y, tile_box);
 				if(!touching_x && !touching_y)
 					continue;
-				flags = tile[4];
+				flags = tile[2];
 
 				// Check if the actor is touching a tile that should transport us to another map
 				// Horizontal transports are based on which map edges we're touching while moving

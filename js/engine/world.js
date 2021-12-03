@@ -42,8 +42,11 @@ class World {
 				for(let layers in map.tileset.layers) {
 					const layer = map.tileset.layers[layers];
 					for(let tile of layer) {
-						const pos = JSON.stringify([tile[0] + (tile[2] - tile[0]) / 2, tile[1] + (tile[3] - tile[1]) / 2]);
-						if(actor.flag("spawn", tile[4]) > 0)
+						const pos = JSON.stringify([
+							(tile[0] * map.tileset.size) + (map.tileset.size / 2),
+							(tile[1] * map.tileset.size) + (map.tileset.size / 2)
+						]);
+						if(actor.flag("spawn", tile[2]) > 0)
 							pos_layer[pos] = layers;
 						else
 							delete pos_layer[pos];
@@ -84,16 +87,17 @@ class World {
 		// The first map matching the temperature range for its location is spawned
 		for(let x = 0; x < data.maps_x; x++) {
 			for(let y = 0; y < data.maps_y; y++) {
-				const temp = Math.sin((x + WORLD_SEED) * (y + WORLD_SEED));
 				for(let map_name of data.maps) {
+					// If a noise check is provided the map must test positive to spawn
 					const map = this.data_maps[map_name];
-					if(temp >= map.temp_min && temp <= map.temp_max) {
-						const scale = vector([data.scale_x, data.scale_y]);
-						const grid = vector([x, y, data.height]);
-						const object = new Map(this, map, scale, grid);
-						this.maps.push(object);
-						break;
-					}
+					if(map.noise && !map.noise(x, y, data.height))
+						continue;
+
+					const scale = vector([data.scale_x, data.scale_y]);
+					const grid = vector([x, y, data.height]);
+					const object = new Map(this, map, scale, grid);
+					this.maps.push(object);
+					break;
 				}
 			}
 		}
