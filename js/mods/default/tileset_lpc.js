@@ -69,8 +69,8 @@ function lpc_tileset(pos_floor, pos_wall, flags, height, cliff) {
 	// Set the floor tiles
 	const floor_x = pos_floor[0];
 	const floor_y = pos_floor[1];
-	const flags_floor = flags.concat(flags, [cliff ? "solid" : "floor"]);
-	const flags_path = flags.concat(flags, [cliff ? "solid" : height > 0 ? "path" : "gravel"]);
+	const flags_floor = flags.concat([cliff ? "solid" : "floor"]);
+	const flags_path = flags.concat([cliff ? "solid" : height > 0 ? "path" : "gravel"]);
 	tiles.floor_center = [
 		{x: floor_x + 1, y: floor_y + 4, flags: flags_floor, noise: lpc_noise_tile_floor_25},
 		{x: floor_x + 0, y: floor_y + 0, flags: flags_floor, noise: lpc_noise_tile_floor_50},
@@ -109,8 +109,8 @@ function lpc_tileset(pos_floor, pos_wall, flags, height, cliff) {
 	// Set the wall tiles
 	const wall_x = pos_wall[0];
 	const wall_y = pos_wall[1];
-	const flags_wall = flags.concat(flags, ["wall"]);
-	const flags_cave = flags.concat(flags, ["cave", cliff ? "cave_out" : "cave_in"]);
+	const flags_wall = flags.concat(["wall"]);
+	const flags_cave = flags.concat(["cave", cliff ? "cave_out" : "cave_in"]);
 	if(height >= 4) {
 		// Configuration for a 4 tile tall wall
 		tiles.wall_left = [
