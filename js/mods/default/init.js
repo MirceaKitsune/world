@@ -18,8 +18,8 @@ const overlay_background = {
 	color: "#4fdfff",
 	alpha: 1,
 	scale: 16,
-	scroll_x: 50,
-	scroll_y: 0,
+	scroll_x: 100,
+	scroll_y: 200,
 	fixed: -1
 };
 
@@ -28,8 +28,8 @@ const overlay_foreground = {
 	image: "backgrounds/clouds_shadow.png",
 	alpha: 0.1,
 	scale: 16,
-	scroll_x: 100,
-	scroll_y: 0,
+	scroll_x: 125,
+	scroll_y: 250,
 	fixed: 0
 };
 

@@ -40,6 +40,31 @@ function html_css(element, property, value) {
 	element.style[property] = value;
 }
 
+// HTML helpers: Stops a CSS animation, returns undefined for consistency
+function html_animation_stop(anim) {
+	if(anim)
+		anim.cancel();
+
+	return undefined;
+}
+
+// HTML helpers: Plays a CSS animation on the given element, returns the new animation
+function html_animation_play(element, prop, pos_start, pos_end, duration, steps) {
+	const settings = {
+		duration: duration * 1000,
+		direction: "normal",
+		easing: steps ? "steps(" + steps + ")" : "linear",
+		iterations: Infinity
+	};
+
+	var anim_start = {};
+	var anim_end = {};
+	anim_start[prop] = px(pos_start);
+	anim_end[prop] = px(pos_end);
+
+	return element.animate([anim_start, anim_end], settings);
+}
+
 // Includes a group of CSS styles
 function include_css(urls) {
 	for(let url of urls) {
@@ -121,10 +146,7 @@ function vec2ang(vec) {
 
 // Helper: Returns a pixel string for HTML formatting
 function px(pixels) {
-	var s = ""
-	for(var pixel of pixels)
-		s += pixel + "px ";
-	return s;
+	return pixels + "px";
 }
 
 // Helper: Returns true if a bounding box intersects another

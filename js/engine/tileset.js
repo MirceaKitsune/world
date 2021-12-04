@@ -7,9 +7,6 @@ class Tileset {
 		this.brushes = brushes;
 		this.size = size;
 
-		// To avoid incorrect draw order sort brushes based on their layer
-		this.brushes.sort(function(a, b) {return a.height - b.height});
-
 		// Objects that store layer data and the HTML elements of layers
 		this.layers = [];
 		this.layers_element = [];
@@ -28,8 +25,8 @@ class Tileset {
 		// Create the tileset element and append it to the parent element
 		this.element = html_create("div");
 		html_set(this.element, "class", "tileset");
-		html_css(this.element, "width", px([this.scale.x * this.size]));
-		html_css(this.element, "height", px([this.scale.y * this.size]));
+		html_css(this.element, "width", px(this.scale.x * this.size));
+		html_css(this.element, "height", px(this.scale.y * this.size));
 		html_parent(this.element, this.map.element_view, true);
 
 		// Load tileset images from brushes, the onload function is called once all images finish loading
@@ -85,41 +82,15 @@ class Tileset {
 				const scale = WORLD_ZOOM * this.size * overlay.scale / (overlay.fixed == 0 ? 2 : 1);
 				const onload = function() {
 					html_css(element_overlay, "backgroundImage", "url(" + image.src + ")");
-					html_css(element_overlay, "backgroundSize", overlay.scale ? px([scale]) : "cover");
+					html_css(element_overlay, "backgroundSize", overlay.scale ? px(scale) : "cover");
 				};
 				const image = load_image(overlay.image, onload.bind(this));
 
-				// Animate the overlay background image, x direction
-				if(overlay.scroll_x > 0) {
-					element_overlay.animate([
-						{
-							backgroundPositionX: px([0])
-						}, {
-							backgroundPositionX: px([WORLD_RESOLUTION_X])
-						}
-					], {
-						duration: overlay.scroll_x * 1000 * (overlay.fixed == 0 ? 2 : 1),
-						direction: "normal",
-						easing: "linear",
-						iterations: Infinity
-					});
-				}
-
-				// Animate the overlay background image, y direction
-				if(overlay.scroll_y > 0) {
-					element_overlay.animate([
-						{
-							backgroundPositionY: px([0])
-						}, {
-							backgroundPositionY: px([WORLD_RESOLUTION_Y])
-						}
-					], {
-						duration: overlay.scroll_y * 1000 * (overlay.fixed == 0 ? 2 : 1),
-						direction: "normal",
-						easing: "linear",
-						iterations: Infinity
-					});
-				}
+				// Animate the background image
+				if(overlay.scroll_x > 0)
+					html_animation_play(element_overlay, "backgroundPositionX", 0, WORLD_RESOLUTION_X, overlay.scroll_x * (overlay.fixed == 0 ? 2 : 1), undefined);
+				if(overlay.scroll_y > 0)
+					html_animation_play(element_overlay, "backgroundPositionY", 0, WORLD_RESOLUTION_Y, overlay.scroll_y * (overlay.fixed == 0 ? 2 : 1), undefined);
 			}
 		}
 	}

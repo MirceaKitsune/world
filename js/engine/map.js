@@ -19,8 +19,8 @@ class Map {
 		html_set(this.element_view, "class", "map_view");
 		html_css(this.element_view, "left", (WORLD_RESOLUTION_X / 2) - (this.scale.x / 2));
 		html_css(this.element_view, "top", (WORLD_RESOLUTION_Y / 2) - (this.scale.y / 2));
-		html_css(this.element_view, "width", px([this.scale.x]));
-		html_css(this.element_view, "height", px([this.scale.y]));
+		html_css(this.element_view, "width", px(this.scale.x));
+		html_css(this.element_view, "height", px(this.scale.y));
 		html_parent(this.element_view, this.element, true);
 
 		// Create the tileset for this map, starts inactive by default

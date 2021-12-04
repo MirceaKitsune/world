@@ -22,7 +22,7 @@ class Actor {
 		this.data.movement = 0;
 		this.data.angle = 0;
 		this.data.layer = 0;
-		this.data.anim = null;
+		this.data.anim = undefined;
 
 		// Private data which shouldn't need to be accessed by other instances or classes
 		this.interval_velocity = null;
@@ -48,9 +48,9 @@ class Actor {
 	onload() {
 		// Set the sprite of this actor on the element
 		html_css(this.element, "backgroundImage", "url(" + this.image.src + ")");
-		html_css(this.element, "backgroundSize", px([this.settings.sprite.scale_x * this.settings.sprite.frames_x, this.settings.sprite.scale_y * this.settings.sprite.frames_y]));
-		html_css(this.element, "width", px([this.settings.sprite.scale_x]));
-		html_css(this.element, "height", px([this.settings.sprite.scale_y]));
+		html_css(this.element, "backgroundSize", px(this.settings.sprite.scale_x * this.settings.sprite.frames_x) + " " + px(this.settings.sprite.scale_y * this.settings.sprite.frames_y));
+		html_css(this.element, "width", px(this.settings.sprite.scale_x));
+		html_css(this.element, "height", px(this.settings.sprite.scale_y));
 
 		this.init();
 	}
@@ -181,7 +181,7 @@ class Actor {
 		}
 
 		// Apply camera position and zoom by using a translate3d CSS transform on the world element
-		html_css(this.map.element_view, "transform", "perspective(0px) translate3d(" + px([this.camera_pos[0]]) + ", " + px([this.camera_pos[1]]) + ", " + px([this.camera_pos[2]]) + ")");
+		html_css(this.map.element_view, "transform", "perspective(0px) translate3d(" + px(this.camera_pos[0]) + ", " + px(this.camera_pos[1]) + ", " + px(this.camera_pos[2]) + ")");
 	}
 
 	// Check if a flag exists in the list and return its value if yes
@@ -194,32 +194,12 @@ class Actor {
 
 	// Applies the given frame and animation to the sprite
 	animation(frame, duration) {
-		const scale_x = this.settings.sprite.scale_x * this.settings.sprite.frames_x;
-		const pos_y = this.settings.sprite.scale_y * -frame;
+		html_css(this.element, "backgroundPositionX", px(0));
+		html_css(this.element, "backgroundPositionY", px(this.settings.sprite.scale_y * -frame));
 
-		// Cancel the existing animation
-		if(this.data.anim) {
-			this.data.anim.cancel();
-			this.data.anim = null;
-		}
-
-		// Play the animation for this row or show the first frame if static
-		if(duration > 0) {
-			this.data.anim = this.element.animate([
-				{
-					backgroundPosition: px([0, pos_y])
-				}, {
-					backgroundPosition: px([scale_x, pos_y])
-				}
-			], {
-				duration: duration * 1000,
-				direction: "normal",
-				easing: "steps(" + this.settings.sprite.frames_x + ")",
-				iterations: Infinity
-			});
-		} else {
-			html_css(this.element, "backgroundPosition", px([0, pos_y]));
-		}
+		this.data.anim = html_animation_stop(this.data.anim);
+		if(duration > 0)
+			this.data.anim = html_animation_play(this.element, "backgroundPositionX", 0, this.settings.sprite.scale_x * this.settings.sprite.frames_x, duration, this.settings.sprite.frames_x);
 	}
 
 	// Applies surface effects to the actor from the topmost surface we're about to touch given our current velocity
