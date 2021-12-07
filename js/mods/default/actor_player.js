@@ -1,23 +1,29 @@
 // Flags for character actors
 const flags_actor_character = {
 	spawn: {
-		road: 1
+		road: true
 	},
-	solid: {
-		solid: 1,
-		wall: 1
+	walkable: {
+		path: true,
+		gravel: true,
+		floor: true,
+		cave_out: [true, false, true, false],
+		cave_in: [true, false, true, false]
 	},
 	climbable: {
-		path: 1
+		path: true
+	},
+	transportable: {
+		floor: true
 	},
 	transport: {
-		road: 1
+		road: true
 	},
 	transport_up: {
-		cave_out: 1
+		cave_out: true
 	},
 	transport_down: {
-		cave_in: 1
+		cave_in: true
 	},
 	friction: {
 		path: 1,

@@ -46,7 +46,7 @@ class World {
 							(tile[0] * map.tileset.size) + (map.tileset.size / 2),
 							(tile[1] * map.tileset.size) + (map.tileset.size / 2)
 						]);
-						if(actor.flag("spawn", tile[2]) > 0)
+						if(actor.flag("spawn", tile[2]))
 							pos_layer[pos] = layers;
 						else
 							delete pos_layer[pos];

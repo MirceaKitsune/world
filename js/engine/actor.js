@@ -117,58 +117,60 @@ class Actor {
 			return;
 
 		// Determine the position at which the actor would come out the other end
-		var target_x = this.data.pos[0];
-		var target_y = this.data.pos[1];
+		var target_check_x = this.data.pos[0];
+		var target_check_y = this.data.pos[1];
 		if(dir.x < 0)
-			target_x = map.scale.x;
+			target_check_x = map.scale.x;
 		if(dir.x > 0)
-			target_x = 0;
+			target_check_x = 0;
 		if(dir.y < 0)
-			target_y = map.scale.y;
+			target_check_y = map.scale.y;
 		if(dir.y > 0)
-			target_y = 0;
-		const target_box = [target_x + this.data.box[0], target_y + this.data.box[1], target_x + this.data.box[2], target_y + this.data.box[3]];
+			target_check_y = 0;
+		const target_box = [target_check_x + this.data.box[0], target_check_y + this.data.box[1], target_check_x + this.data.box[2], target_check_y + this.data.box[3]];
 
-		// Get the tile touched at this position on the new map
-		// The new layer and position are established based on the transport type, if a solid tile is detected the move is aborted
-		// When the actor travels through a door, the target position is offset by one tile so they come out in front of the door
-		var pos_x = undefined;
-		var pos_y = undefined;
-		var layer = undefined;
+		// Find the transport tile being touched by the actor at the desired location, pick the best neighboring position from the valid tiles found
+		// Position: 0 = x, 1 = y, 2 = layer, 3 = angle
+		var target = undefined;
 		for(let layers in map.tileset.layers) {
 			for(let tile of map.tileset.layers[layers]) {
+				const tile_flag = this.flag("transport", tile[2]) || this.flag("transport_up", tile[2]) || this.flag("transport_down", tile[2]);
 				const tile_box = box(tile[0], tile[1], map.tileset.size);
-				if(box_intersects(target_box, tile_box)) {
-					const transport_horizontal = this.flag("transport", tile[2]) > 0;
-					const transport_vertical = this.flag("transport_up", tile[2]) > 0 || this.flag("transport_down", tile[2]) > 0;
-					if(this.flag("solid", tile[2]) > 0) {
-						pos_x = pos_y = layer = undefined;
-					} else if(transport_horizontal || transport_vertical) {
-						pos_x = (tile[0] * map.tileset.size) + (map.tileset.size / 2);
-						pos_y = (tile[1] * map.tileset.size) + (map.tileset.size / 2);
-						layer = layers;
-						if(transport_vertical)
-							pos_y += map.tileset.size;
+				if(tile_flag && box_intersects(target_box, tile_box)) {
+					var target_pos = undefined;
+					var target_pos_up = undefined;
+					var target_pos_down = undefined;
+					var target_pos_left = undefined;
+					var target_pos_right = undefined;
+					for(let tile_target of map.tileset.layers[layers]) {
+						const tile_target_flag = this.flag("transportable", tile_target[2]);
+						if(tile_target[0] == tile[0] && tile_target[1] == tile[1])
+							target_pos = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
+						if(tile_target[0] == tile[0] && tile_target[1] == tile[1] - 1)
+							target_pos_up = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
+						if(tile_target[0] == tile[0] && tile_target[1] == tile[1] + 1)
+							target_pos_down = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
+						if(tile_target[0] == tile[0] - 1 && tile_target[1] == tile[1])
+							target_pos_left = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
+						if(tile_target[0] == tile[0] + 1 && tile_target[1] == tile[1])
+							target_pos_right = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
 					}
+					const pos = target_pos || target_pos_up || target_pos_down || target_pos_left || target_pos_right;
+					target = pos ? [(pos[0] * map.tileset.size) + (map.tileset.size / 2), (pos[1] * map.tileset.size) + (map.tileset.size / 2), layers, dir.z == 0 ? undefined : 2] : undefined;
 				}
 			}
 		}
-		if(!pos_x || !pos_y || !layer)
-			return;
-
-		// Determine the angle if it should be changed
-		var angle = undefined;
-		if(dir.z != 0)
-			angle = 2;
 
 		// Set timeout and transition effects for changing the map
-		this.world.set_tint(false, ACTOR_TRANSITION_TIME / 2);
-		this.timeout_map = setTimeout(function() {
-			this.map_set(map);
-			this.move(pos_x, pos_y, layer, angle);
-			this.world.set_tint(true, ACTOR_TRANSITION_TIME / 2);
-			this.timeout_map = null;
-		}.bind(this), ACTOR_TRANSITION_TIME / 2 * 1000);
+		if(target) {
+			this.world.set_tint(false, ACTOR_TRANSITION_TIME / 2);
+			this.timeout_map = setTimeout(function() {
+				this.map_set(map);
+				this.move(target[0], target[1], target[2], target[3]);
+				this.world.set_tint(true, ACTOR_TRANSITION_TIME / 2);
+				this.timeout_map = null;
+			}.bind(this), ACTOR_TRANSITION_TIME / 2 * 1000);
+		}
 	}
 
 	// Focuses the camera on the position of the actor
@@ -219,7 +221,7 @@ class Actor {
 		for(let flags in this.settings.flags[category])
 			if(list.includes(flags))
 				return this.settings.flags[category][flags];
-		return null;
+		return undefined;
 	}
 
 	// Applies the given frame and animation to the sprite
@@ -265,8 +267,10 @@ class Actor {
 				flags = tile[2];
 
 				// Check if the actor is touching a tile that should transport us to another map
+				// Transport tiles must be at the top, they become invalid when covered
 				// Horizontal transports are based on which map edges we're touching
-				if(this.flag("transport", flags) > 0) {
+				transport_dir = vector([0, 0, 0]);
+				if(this.flag("transport", flags)) {
 					if(this.data.pos[0] <= 0)
 						transport_dir.x = -1;
 					if(this.data.pos[0] >= this.map.scale.x)
@@ -275,31 +279,37 @@ class Actor {
 						transport_dir.y = -1;
 					if(this.data.pos[1] >= this.map.scale.y)
 						transport_dir.y = 1;
-				} else if(this.flag("transport_up", flags) > 0) {
+				} else if(this.flag("transport_up", flags)) {
 					transport_dir.z = 1;
-				} else if(this.flag("transport_down", flags) > 0) {
+				} else if(this.flag("transport_down", flags)) {
 					transport_dir.z = -1;
 				}
 
 				// Remember the last target layer we touched and inherit its flags
 				// If the actor is standing on a path tile all floors become valid targets
-				if(this.flag("climbable", flags) > 0)
+				if(this.flag("climbable", flags))
 					layer_path = true;
 				else
 					layer = layers;
 
 				// We're colliding if this is either a solid tile, or a non-solid one from another layer unless we have a path
-				// The topmost surface is counted so a later iteration may override this decision
-				if(this.flag("solid", flags) > 0) {
+				// The topmost surface is counted last so a later iteration may override this decision
+				// If the surface flag is an array, movement is filtered per direction
+				// Angle, clockwise direction: 0 = top, 1 = right, 2 = bottom, 3 = left
+				const walk = this.flag("walkable", flags);
+				const walk_dir = walk && typeof walk === "object" ? [walk[0], walk[1], walk[2], walk[3]] : [walk, walk, walk, walk];
+				const walk_valid_x = (walk_dir[1] && this.data.vel[0] > 0) || (walk_dir[3] && this.data.vel[0] < 0);
+				const walk_valid_y = (walk_dir[0] && this.data.vel[1] > 0) || (walk_dir[2] && this.data.vel[1] < 0);
+				if(walk_valid_x || walk_valid_y) {
+					if(touching_x)
+						solid_x = !walk_valid_x || (layer != this.data.layer && !layer_path);
+					if(touching_y)
+						solid_y = !walk_valid_y || (layer != this.data.layer && !layer_path);
+				} else {
 					if(touching_x)
 						solid_x = true;
 					if(touching_y)
 						solid_y = true;
-				} else {
-					if(touching_x)
-						solid_x = layers != this.data.layer && !layer_path;
-					if(touching_y)
-						solid_y = layers != this.data.layer && !layer_path;
 				}
 			}
 		}

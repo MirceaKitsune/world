@@ -4,9 +4,6 @@ class ActorPlayer extends Actor {
 		// The event must be the first parameter of the functions
 		document.addEventListener("keydown", this.key_down.bind(this), false);
 		document.addEventListener("keyup", this.key_up.bind(this), false);
-
-		// Pressed movement keys: -x = left, +x = right, -y = up, +y = down
-		this.keys = [0, 0];
 	}
 
 	// Fires when a key is pressed
@@ -14,20 +11,14 @@ class ActorPlayer extends Actor {
 		if(event.repeat)
 			return;
 
-		const vel = this.settings.velocity_move;
-		if(event.key == "ArrowLeft" || event.key == "a") {
-			this.keys[0] -= this.settings.acceleration;
-			this.velocity_set_acceleration(this.keys[0], undefined);
-		} else if(event.key == "ArrowRight" || event.key == "d") {
-			this.keys[0] += this.settings.acceleration;
-			this.velocity_set_acceleration(this.keys[0], undefined);
-		} else if(event.key == "ArrowUp" || event.key == "w") {
-			this.keys[1] -= this.settings.acceleration;
-			this.velocity_set_acceleration(undefined, this.keys[1]);
-		} else if(event.key == "ArrowDown" || event.key == "s") {
-			this.keys[1] += this.settings.acceleration;
-			this.velocity_set_acceleration(undefined, this.keys[1]);
-		}
+		if(this.data.acc[0] >= 0 && (event.key == "ArrowLeft" || event.key == "a" || event.key == "A"))
+			this.velocity_set_acceleration(-this.settings.acceleration, undefined);
+		if(this.data.acc[0] <= 0 && (event.key == "ArrowRight" || event.key == "d" || event.key == "D"))
+			this.velocity_set_acceleration(this.settings.acceleration, undefined);
+		if(this.data.acc[1] >= 0 && (event.key == "ArrowUp" || event.key == "w" || event.key == "W"))
+			this.velocity_set_acceleration(undefined, -this.settings.acceleration);
+		if(this.data.acc[1] <= 0 && (event.key == "ArrowDown" || event.key == "s" || event.key == "S"))
+			this.velocity_set_acceleration(undefined, this.settings.acceleration);
 	}
 
 	// Fires when a key is unpressed
@@ -35,19 +26,13 @@ class ActorPlayer extends Actor {
 		if(event.repeat)
 			return;
 
-		const vel = this.settings.velocity_move;
-		if(event.key == "ArrowLeft" || event.key == "a") {
-			this.keys[0] += this.settings.acceleration;
-			this.velocity_set_acceleration(this.keys[0], undefined);
-		} else if(event.key == "ArrowRight" || event.key == "d") {
-			this.keys[0] -= this.settings.acceleration;
-			this.velocity_set_acceleration(this.keys[0], undefined);
-		} else if(event.key == "ArrowUp" || event.key == "w") {
-			this.keys[1] += this.settings.acceleration;
-			this.velocity_set_acceleration(undefined, this.keys[1]);
-		} else if(event.key == "ArrowDown" || event.key == "s") {
-			this.keys[1] -= this.settings.acceleration;
-			this.velocity_set_acceleration(undefined, this.keys[1]);
-		}
+		if(this.data.acc[0] < 0 && (event.key == "ArrowLeft" || event.key == "a" || event.key == "A"))
+			this.velocity_set_acceleration(0, undefined);
+		if(this.data.acc[0] > 0 && (event.key == "ArrowRight" || event.key == "d" || event.key == "D"))
+			this.velocity_set_acceleration(0, undefined);
+		if(this.data.acc[1] < 0 && (event.key == "ArrowUp" || event.key == "w" || event.key == "W"))
+			this.velocity_set_acceleration(undefined, 0);
+		if(this.data.acc[1] > 0 && (event.key == "ArrowDown" || event.key == "s" || event.key == "S"))
+			this.velocity_set_acceleration(undefined, 0);
 	}
 }
