@@ -155,7 +155,19 @@ class Actor {
 						if(tile_target[0] == tile[0] + 1 && tile_target[1] == tile[1])
 							target_pos_right = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
 					}
-					const pos = target_pos || target_pos_up || target_pos_down || target_pos_left || target_pos_right;
+
+					// Pick and use the best position available, the ideal order is based on our velocity
+					var pos = undefined;
+					if(this.data.vel[0] == 0 && this.data.vel[1] == 0)
+						pos = target_pos || target_pos_up || target_pos_down || target_pos_left || target_pos_right;
+					else if(Math.abs(this.data.vel[0]) > Math.abs(this.data.vel[1]) && this.data.vel[0] > 0)
+						pos = target_pos || target_pos_right || target_pos_left || target_pos_up || target_pos_down;
+					else if(Math.abs(this.data.vel[0]) > Math.abs(this.data.vel[1]) && this.data.vel[0] < 0)
+						pos = target_pos || target_pos_left || target_pos_right || target_pos_up || target_pos_down;
+					else if(Math.abs(this.data.vel[1]) > Math.abs(this.data.vel[0]) && this.data.vel[1] > 0)
+						pos = target_pos || target_pos_down || target_pos_up || target_pos_left || target_pos_right;
+					else if(Math.abs(this.data.vel[1]) > Math.abs(this.data.vel[0]) && this.data.vel[1] < 0)
+						pos = target_pos || target_pos_up || target_pos_down || target_pos_left || target_pos_right;
 					target = pos ? [(pos[0] * map.tileset.size) + (map.tileset.size / 2), (pos[1] * map.tileset.size) + (map.tileset.size / 2), layers, dir.z == 0 ? undefined : 2] : undefined;
 				}
 			}

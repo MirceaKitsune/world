@@ -55,6 +55,11 @@ const lpc_noise_tile_cave_true = function(x, y, layer) {
 	return noise_terrain(x, 0) <= 0.05;
 }
 
+// Noise function for side cave tiles, draws the cave
+const lpc_noise_tile_cave_side_true = function(x, y, layer) {
+	return noise_terrain(x, y) <= 0.05;
+}
+
 // Noise function for cave tiles, skips the cave
 // To keep the choice persistent per column, y position must be fixed, else we may get only one piece of a cave spawned
 // TODO: Find a pattern that still randomizes based on height but without cutting cave entrances
@@ -107,72 +112,75 @@ function lpc_tileset(pos_floor, pos_wall, flags, height, cliff) {
 	tiles.floor_corner_out_bottom_right = [{x: floor_x + 2, y: floor_y + 5}];
 
 	// Set the wall tiles
-	const wall_x = pos_wall[0];
-	const wall_y = pos_wall[1];
-	const flags_wall = flags.concat(["wall"]);
-	const flags_cave = flags.concat(["cave", cliff ? "cave_out" : "cave_in"]);
-	if(height >= 4) {
-		// Configuration for a 4 tile tall wall
-		tiles.wall_left = [
-			[{x: wall_x + 0, y: wall_y + 1}],
-			[{x: wall_x + 0, y: wall_y + 2}],
-			[{x: wall_x + 0, y: wall_y + 2}],
-			[{x: wall_x + 0, y: wall_y + 3}]
-		];
-		tiles.wall_middle = [
-			[{x: wall_x + 1, y: wall_y + 1, flags:flags_wall}],
-			[{x: wall_x + 1, y: wall_y + 2, flags:flags_wall}],
-			[{x: wall_x + 1, y: wall_y + 2, flags:flags_wall, noise: lpc_noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 4, flags:flags_wall, noise: lpc_noise_tile_cave_true}],
-			[{x: wall_x + 1, y: wall_y + 3, flags:flags_wall, noise: lpc_noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 5, flags:flags_cave, noise: lpc_noise_tile_cave_true}],
-		];
-		tiles.wall_right = [
-			[{x: wall_x + 2, y: wall_y + 1}],
-			[{x: wall_x + 2, y: wall_y + 2}],
-			[{x: wall_x + 2, y: wall_y + 2}],
-			[{x: wall_x + 2, y: wall_y + 3}]
-		];
-	} else if(height >= 3) {
-		// Configuration for a 3 tile tall wall
-		tiles.wall_left = [
-			[{x: wall_x + 0, y: wall_y + 1}],
-			[{x: wall_x + 0, y: wall_y + 2}],
-			[{x: wall_x + 0, y: wall_y + 3}]
-		];
-		tiles.wall_middle = [
-			[{x: wall_x + 1, y: wall_y + 1, flags:flags_wall}],
-			[{x: wall_x + 1, y: wall_y + 2, flags:flags_wall, noise: lpc_noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 4, flags:flags_wall, noise: lpc_noise_tile_cave_true}],
-			[{x: wall_x + 1, y: wall_y + 3, flags:flags_wall, noise: lpc_noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 5, flags:flags_cave, noise: lpc_noise_tile_cave_true}],
-		];
-		tiles.wall_right = [
-			[{x: wall_x + 2, y: wall_y + 1}],
-			[{x: wall_x + 2, y: wall_y + 2}],
-			[{x: wall_x + 2, y: wall_y + 3}]
-		];
-	} else if(height >= 2) {
-		// Configuration for a 2 tile tall wall
-		tiles.wall_left = [
-			[{x: wall_x + 0, y: wall_y + 1}],
-			[{x: wall_x + 0, y: wall_y + 3}]
-		];
-		tiles.wall_middle = [
-			[{x: wall_x + 1, y: wall_y + 1, flags:flags_wall}],
-			[{x: wall_x + 1, y: wall_y + 3, flags:flags_wall}]
-		];
-		tiles.wall_right = [
-			[{x: wall_x + 2, y: wall_y + 1}],
-			[{x: wall_x + 2, y: wall_y + 3}]
-		];
-	} else if(height >= 1) {
-		// Configuration for a 1 tile tall wall
-		tiles.wall_left = [
-			[{x: wall_x + 0, y: wall_y + 0}]
-		];
-		tiles.wall_middle = [
-			[{x: wall_x + 1, y: wall_y + 0, flags:flags_wall}]
-		];
-		tiles.wall_right = [
-			[{x: wall_x + 2, y: wall_y + 0}]
-		]
+	if(height > 0) {
+		const wall_x = pos_wall[0];
+		const wall_y = pos_wall[1];
+		const flags_wall = flags.concat(["wall"]);
+		const flags_cave = flags.concat(["cave", cliff ? "cave_out" : "cave_in"]);
+		const flags_cave_side = flags.concat(["cave", cliff ? "cave_side_out" : "cave_side_in"]);
+		if(height >= 4) {
+			// Configuration for a 4 tile tall wall
+			tiles.wall_left = [
+				[{x: wall_x + 0, y: wall_y + 1}],
+				[{x: wall_x + 0, y: wall_y + 2}],
+				[{x: wall_x + 0, y: wall_y + 2}],
+				[{x: wall_x + 1, y: wall_y + 6, flags: flags_cave_side, noise: lpc_noise_tile_cave_side_true}, {x: wall_x + 0, y: wall_y + 3}]
+			];
+			tiles.wall_middle = [
+				[{x: wall_x + 1, y: wall_y + 1, flags: flags_wall}],
+				[{x: wall_x + 1, y: wall_y + 2, flags: flags_wall}],
+				[{x: wall_x + 1, y: wall_y + 2, flags: flags_wall, noise: lpc_noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 4, flags: flags_wall, noise: lpc_noise_tile_cave_true}],
+				[{x: wall_x + 1, y: wall_y + 3, flags: flags_wall, noise: lpc_noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 5, flags: flags_cave, noise: lpc_noise_tile_cave_true}],
+			];
+			tiles.wall_right = [
+				[{x: wall_x + 2, y: wall_y + 1}],
+				[{x: wall_x + 2, y: wall_y + 2}],
+				[{x: wall_x + 2, y: wall_y + 2}],
+				[{x: wall_x + 2, y: wall_y + 6, flags: flags_cave_side, noise: lpc_noise_tile_cave_side_true}, {x: wall_x + 2, y: wall_y + 3}]
+			];
+		} else if(height >= 3) {
+			// Configuration for a 3 tile tall wall
+			tiles.wall_left = [
+				[{x: wall_x + 0, y: wall_y + 1}],
+				[{x: wall_x + 0, y: wall_y + 2}],
+				[{x: wall_x + 1, y: wall_y + 6, flags: flags_cave_side, noise: lpc_noise_tile_cave_side_true}, {x: wall_x + 0, y: wall_y + 3}]
+			];
+			tiles.wall_middle = [
+				[{x: wall_x + 1, y: wall_y + 1, flags: flags_wall}],
+				[{x: wall_x + 1, y: wall_y + 2, flags: flags_wall, noise: lpc_noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 4, flags: flags_wall, noise: lpc_noise_tile_cave_true}],
+				[{x: wall_x + 1, y: wall_y + 3, flags: flags_wall, noise: lpc_noise_tile_cave_false}, {x: wall_x + 0, y: wall_y + 5, flags: flags_cave, noise: lpc_noise_tile_cave_true}],
+			];
+			tiles.wall_right = [
+				[{x: wall_x + 2, y: wall_y + 1}],
+				[{x: wall_x + 2, y: wall_y + 2}],
+				[{x: wall_x + 2, y: wall_y + 6, flags: flags_cave_side, noise: lpc_noise_tile_cave_side_true}, {x: wall_x + 2, y: wall_y + 3}]
+			];
+		} else if(height >= 2) {
+			// Configuration for a 2 tile tall wall
+			tiles.wall_left = [
+				[{x: wall_x + 0, y: wall_y + 1}],
+				[{x: wall_x + 0, y: wall_y + 3}]
+			];
+			tiles.wall_middle = [
+				[{x: wall_x + 1, y: wall_y + 1, flags: flags_wall}],
+				[{x: wall_x + 1, y: wall_y + 3, flags: flags_wall}]
+			];
+			tiles.wall_right = [
+				[{x: wall_x + 2, y: wall_y + 1}],
+				[{x: wall_x + 2, y: wall_y + 3}]
+			];
+		} else if(height >= 1) {
+			// Configuration for a 1 tile tall wall
+			tiles.wall_left = [
+				[{x: wall_x + 0, y: wall_y + 0}]
+			];
+			tiles.wall_middle = [
+				[{x: wall_x + 1, y: wall_y + 0, flags: flags_wall}]
+			];
+			tiles.wall_right = [
+				[{x: wall_x + 2, y: wall_y + 0}]
+			]
+		}
 	}
 
 	return tiles;

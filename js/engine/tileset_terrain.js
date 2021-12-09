@@ -24,13 +24,13 @@ class TilesetTerrain extends Tileset {
 		y += this.offset.y;
 
 		// This tile must test positive for the noise check
-		if(brush.noise && !brush.noise(x, y, layer))
+		if(!brush || (brush.noise && !brush.noise(x, y, layer)))
 			return false;
 
 		// The neighbors of this tile must test positive for the noise check
 		const neighbors = this.neighbors(x, y);
 		for(let neighbor of neighbors)
-			if(brush.noise && !brush.noise(neighbor.x, neighbor.y, layer))
+			if(!brush || (brush.noise && !brush.noise(neighbor.x, neighbor.y, layer)))
 				return false;
 
 		// All checks passed, this is a valid tile we can draw to

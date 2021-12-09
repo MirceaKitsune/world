@@ -8,7 +8,9 @@ const flags_actor_character = {
 		gravel: true,
 		floor: true,
 		cave_out: [true, false, true, false],
-		cave_in: [true, false, true, false]
+		cave_in: [true, false, true, false],
+		cave_side_out: true,
+		cave_side_in: true
 	},
 	climbable: {
 		path: true
@@ -20,10 +22,12 @@ const flags_actor_character = {
 		road: true
 	},
 	transport_up: {
-		cave_out: true
+		cave_out: true,
+		cave_side_out: true
 	},
 	transport_down: {
-		cave_in: true
+		cave_in: true,
+		cave_side_in: true
 	},
 	friction: {
 		path: 1,

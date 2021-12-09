@@ -99,7 +99,7 @@ class Tileset {
 	tile_set(x, y, layer, image, tiles) {
 		for(let tile of tiles) {
 			// Skip if this tile has a noise function that doesn't pass the check
-			if(tile.noise && !tile.noise(x, y, layer))
+			if(!tile || (tile.noise && !tile.noise(x, y, layer)))
 				continue;
 
 			// If this layer hasn't been set by a previous call, set it up now

@@ -90,7 +90,7 @@ class World {
 				for(let map_name of data.maps) {
 					// If a noise check is provided the map must test positive to spawn
 					const map = this.data_maps[map_name];
-					if(map.noise && !map.noise(x, y, data.height))
+					if(!map || (map.noise && !map.noise(x, y, data.height)))
 						continue;
 
 					const scale = vector([data.scale_x, data.scale_y]);
