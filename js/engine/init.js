@@ -124,6 +124,19 @@ function random_range(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+// Helper: Returns the first "length" properties of an array, or an array with the given value added "length" times if the source isn't one
+function fixed_array(array, length) {
+	var array_new = undefined;
+	if(typeof array === "object") {
+		array_new = array.slice(0, length);
+	} else if(array) {
+		array_new = [];
+		for(let i = 0; i < length; i++)
+			array_new.push(array);
+	}
+	return array_new;
+}
+
 // Helper: Returns a vector from an array
 function vector(array) {
 	return {x: array[0], y: array[1], z: array[2]};

@@ -105,70 +105,74 @@ class Actor {
 	}
 
 	// Takes us to another map on the map grid in the given direction
-	map_set_grid(dir) {
+	map_set_grid(direction) {
 		// Don't interrupt an existing transition
 		if(this.timeout_map)
 			return;
 
 		// Determine the grid position of the map we should move to then fetch the map at that position
-		const grid = vector([this.map.grid.x + dir.x, this.map.grid.y + dir.y, this.map.grid.z + dir.z]);
+		const grid = vector([this.map.grid.x + direction.x, this.map.grid.y + direction.y, this.map.grid.z + direction.z]);
 		const map = this.world.map_at_grid(grid);
 		if(!map)
 			return;
 
 		// Determine the position at which the actor would come out the other end
+		// We want the actor's origin to be inside the corresponding transport tile, use the position dot rather than the bounding box
 		var target_check_x = this.data.pos[0];
 		var target_check_y = this.data.pos[1];
-		if(dir.x < 0)
+		if(direction.x < 0)
 			target_check_x = map.scale.x;
-		if(dir.x > 0)
+		if(direction.x > 0)
 			target_check_x = 0;
-		if(dir.y < 0)
+		if(direction.y < 0)
 			target_check_y = map.scale.y;
-		if(dir.y > 0)
+		if(direction.y > 0)
 			target_check_y = 0;
-		const target_box = [target_check_x + this.data.box[0], target_check_y + this.data.box[1], target_check_x + this.data.box[2], target_check_y + this.data.box[3]];
+		const target_box = [target_check_x, target_check_y, target_check_x, target_check_y];
 
-		// Find the transport tile being touched by the actor at the desired location, pick the best neighboring position from the valid tiles found
+		// Find the transport tile being touched by the actor at the desired location, it must lead in the direction specified by the flag
 		// Position: 0 = x, 1 = y, 2 = layer, 3 = angle
+		// Transport, clockwise direction: 0 = up, 1 = right, 2 = down, 3 = left, 4 = up, 5 = down
 		var target = undefined;
 		for(let layers in map.tileset.layers) {
 			for(let tile of map.tileset.layers[layers]) {
-				const tile_flag = this.flag("transport", tile[2]) || this.flag("transport_up", tile[2]) || this.flag("transport_down", tile[2]);
 				const tile_box = box(tile[0], tile[1], map.tileset.size);
-				if(tile_flag && box_intersects(target_box, tile_box)) {
-					var target_pos = undefined;
-					var target_pos_up = undefined;
-					var target_pos_down = undefined;
-					var target_pos_left = undefined;
-					var target_pos_right = undefined;
-					for(let tile_target of map.tileset.layers[layers]) {
-						const tile_target_flag = this.flag("transportable", tile_target[2]);
-						if(tile_target[0] == tile[0] && tile_target[1] == tile[1])
-							target_pos = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
-						if(tile_target[0] == tile[0] && tile_target[1] == tile[1] - 1)
-							target_pos_up = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
-						if(tile_target[0] == tile[0] && tile_target[1] == tile[1] + 1)
-							target_pos_down = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
-						if(tile_target[0] == tile[0] - 1 && tile_target[1] == tile[1])
-							target_pos_left = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
-						if(tile_target[0] == tile[0] + 1 && tile_target[1] == tile[1])
-							target_pos_right = tile_target_flag ? [tile_target[0], tile_target[1]] : undefined;
+				if(box_intersects(target_box, tile_box)) {
+					// If we touched a corresponding transport tile at the new location, determine which of its neighboring positions are walkable
+					// The transport tile at the other end must lead back to the direction we came from, for example if our direction is -x it must go to +x
+					// Horizontal transport tiles are valid targets as they're considered floors, vertical ones act as doors so the actor cannot land there
+					// Positions, clockwise direction: 0 = up, 1 = right, 2 = down, 3 = left
+					var target_pos = [];
+					const dir = fixed_array(this.flag("transport", tile[2]), 6);
+					const valid = dir && ((direction.x > 0 && dir[3]) || (direction.x < 0 && dir[1]) || (direction.y < 0 && dir[2]) || (direction.y > 0 && dir[0]) || (direction.z < 0 && dir[4]) || (direction.z > 0 && dir[5]));
+					if(valid) {
+						for(let target_tile of map.tileset.layers[layers]) {
+							const target_dir = fixed_array(this.flag("transport", target_tile[2]), 6);
+							const target_valid = fixed_array(this.flag("walkable", target_tile[2]), 4) && !(target_dir && (target_dir[4] || target_dir[5]));
+							if(target_tile[0] == tile[0] && target_tile[1] == tile[1] - 1)
+								target_pos[0] = target_valid ? target_tile : undefined;
+							if(target_tile[0] == tile[0] + 1 && target_tile[1] == tile[1])
+								target_pos[1] = target_valid ? target_tile : undefined;
+							if(target_tile[0] == tile[0] && target_tile[1] == tile[1] + 1)
+								target_pos[2] = target_valid ? target_tile : undefined;
+							if(target_tile[0] == tile[0] - 1 && target_tile[1] == tile[1])
+								target_pos[3] = target_valid ? target_tile : undefined;
+						}
 					}
 
-					// Pick and use the best position available, the ideal order is based on our velocity
+					// Pick and use the best neighbor position available, the ideal order is our velocity followed by its opposite then the other directions
+					// The actor will face in the direction of the movement for horizontal transports, its opposite for vertical ones to simulate walking through a door
 					var pos = undefined;
-					if(this.data.vel[0] == 0 && this.data.vel[1] == 0)
-						pos = target_pos || target_pos_up || target_pos_down || target_pos_left || target_pos_right;
-					else if(Math.abs(this.data.vel[0]) > Math.abs(this.data.vel[1]) && this.data.vel[0] > 0)
-						pos = target_pos || target_pos_right || target_pos_left || target_pos_up || target_pos_down;
+					if(Math.abs(this.data.vel[0]) > Math.abs(this.data.vel[1]) && this.data.vel[0] > 0)
+						pos = target_pos[1] || target_pos[3] || target_pos[0] || target_pos[2];
 					else if(Math.abs(this.data.vel[0]) > Math.abs(this.data.vel[1]) && this.data.vel[0] < 0)
-						pos = target_pos || target_pos_left || target_pos_right || target_pos_up || target_pos_down;
+						pos = target_pos[3] || target_pos[1] || target_pos[2] || target_pos[0];
 					else if(Math.abs(this.data.vel[1]) > Math.abs(this.data.vel[0]) && this.data.vel[1] > 0)
-						pos = target_pos || target_pos_down || target_pos_up || target_pos_left || target_pos_right;
+						pos = target_pos[2] || target_pos[0] || target_pos[3] || target_pos[1];
 					else if(Math.abs(this.data.vel[1]) > Math.abs(this.data.vel[0]) && this.data.vel[1] < 0)
-						pos = target_pos || target_pos_up || target_pos_down || target_pos_left || target_pos_right;
-					target = pos ? [(pos[0] * map.tileset.size) + (map.tileset.size / 2), (pos[1] * map.tileset.size) + (map.tileset.size / 2), layers, dir.z == 0 ? undefined : 2] : undefined;
+						pos = target_pos[0] || target_pos[2] || target_pos[1] || target_pos[3];
+					const angle = direction.z == 0 ? vec2ang(vector([this.data.vel[0], this.data.vel[1]])) : vec2ang(vector([-this.data.vel[0], -this.data.vel[1]]));
+					target = pos ? [(pos[0] * map.tileset.size) + (map.tileset.size / 2), (pos[1] * map.tileset.size) + (map.tileset.size / 2), layers, angle] : undefined;
 				}
 			}
 		}
@@ -279,23 +283,23 @@ class Actor {
 				flags = tile[2];
 
 				// Check if the actor is touching a tile that should transport us to another map
-				// Transport tiles must be at the top, they become invalid when covered
-				// Horizontal transports are based on which map edges we're touching
+				// Transport tiles must be at the top, they become invalid when covered by another tile containing flags
+				// Horizontal transports are based on which map edges we're touching, they require movement in the direction of the transport
+				// Transport, clockwise direction: 0 = up, 1 = right, 2 = down, 3 = left, 4 = up, 5 = down
 				transport_dir = vector([0, 0, 0]);
-				if(this.flag("transport", flags)) {
-					if(this.data.pos[0] <= 0)
-						transport_dir.x = -1;
-					if(this.data.pos[0] >= this.map.scale.x)
-						transport_dir.x = 1;
-					if(this.data.pos[1] <= 0)
-						transport_dir.y = -1;
-					if(this.data.pos[1] >= this.map.scale.y)
-						transport_dir.y = 1;
-				} else if(this.flag("transport_up", flags)) {
+				const dir = fixed_array(this.flag("transport", flags), 6);
+				if(dir && dir[0] && this.data.vel[1] < 0 && this.data.pos[1] <= this.map.tileset.size)
+					transport_dir.y = -1;
+				if(dir && dir[1] && this.data.vel[0] > 0 && this.data.pos[0] >= this.map.scale.x - this.map.tileset.size)
+					transport_dir.x = 1;
+				if(dir && dir[2] && this.data.vel[1] > 0 && this.data.pos[1] >= this.map.scale.y - this.map.tileset.size)
+					transport_dir.y = 1;
+				if(dir && dir[3] && this.data.vel[0] < 0 && this.data.pos[0] <= this.map.tileset.size)
+					transport_dir.x = -1;
+				if(dir && dir[4])
 					transport_dir.z = 1;
-				} else if(this.flag("transport_down", flags)) {
+				if(dir && dir[5])
 					transport_dir.z = -1;
-				}
 
 				// Remember the last target layer we touched and inherit its flags
 				// If the actor is standing on a path tile all floors become valid targets

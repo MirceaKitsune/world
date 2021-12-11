@@ -15,19 +15,12 @@ const flags_actor_character = {
 	climbable: {
 		path: true
 	},
-	transportable: {
-		floor: true
-	},
 	transport: {
-		road: true
-	},
-	transport_up: {
-		cave_out: true,
-		cave_side_out: true
-	},
-	transport_down: {
-		cave_in: true,
-		cave_side_in: true
+		road: [true, true, true, true, false, false],
+		cave_out: [false, false, false, false, true, false],
+		cave_in: [false, false, false, false, false, true],
+		cave_side_out: [false, false, false, false, true, false],
+		cave_side_in: [false, false, false, false, false, true]
 	},
 	friction: {
 		path: 1,
